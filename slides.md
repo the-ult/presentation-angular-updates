@@ -351,26 +351,27 @@ The foundation everything else is built on
 
 ---
 
-# Signals primitives — what's stable now
+# Signals timeline — what stabilized when
 
 <div class="text-sm pt-2">
 
 | Primitive | Introduced | Stable since | Purpose |
 |---|---|---|---|
-| `signal()` / `computed()` / `input()` | v16–v17 | v17–v19 | Core building blocks |
-| `effect()` | v16 | **v20** | Side-effects on signal changes |
-| `toSignal()` | v16 | **v20** | RxJS → Signal bridge |
+| `signal()` / `computed()` | v16 | **v17** | Core state + derivation |
+| `input()` | v17.1 | **v19** | Component inputs |
+| `effect()` | v16 | **v20** | Side-effects |
+| `toSignal()` | v16 | **v20** | RxJS interop |
 | `linkedSignal()` | v19 | **v20** | Writable + auto-reset |
-| `model()` | v17.2 | v19 | Two-way bindable signal input |
-| `resource()` / `rxResource()` | v19 | **v22** | Signal-native async |
-| `httpResource()` | v20 | **v22** | Signal-native HTTP |
+| `model()` | v17.2 | **v19** | Two-way input |
+| `resource()` / `rxResource()` | v19 | **v22** | Async resources |
+| `httpResource()` | v20 | **v22** | HTTP resources |
 
 </div>
 
 <v-click>
 
 <div class="pt-4 text-sm opacity-80">
-v22 graduates the async trio — <code>resource()</code>, <code>rxResource()</code>, and <code>httpResource()</code> — so the whole stack is now on stable ground.
+Cheat sheet: <code>v17</code> core signals, <code>v19</code> inputs/models, <code>v20</code> effects + interop, <code>v22</code> async resources.
 </div>
 
 </v-click>
@@ -381,11 +382,11 @@ Quick reference. Useful for Q&A. The story changed since the first draft: the as
 
 ---
 
-# `linkedSignal` — the missing piece
+# Where `linkedSignal()` fits
 
 <div class="pt-2">
 
-The pattern: *"a value that **derives** from a source, but the user can also **override** it manually, and **resets** when the source changes."*
+The pattern: *derive it by default, let the user override it, reset it when the source changes.*
 
 </div>
 
@@ -394,11 +395,11 @@ The pattern: *"a value that **derives** from a source, but the user can also **o
 <div class="pt-4 grid grid-cols-4 gap-2 text-center text-sm">
   <div class="p-3 bg-blue-500/20 rounded">
     <code class="font-bold">computed()</code><br/>
-    <span class="opacity-70">read-only derived</span>
+    <span class="opacity-70">derived only</span>
   </div>
   <div class="p-3 bg-green-500/20 rounded">
     <code class="font-bold">signal()</code><br/>
-    <span class="opacity-70">plain mutable</span>
+    <span class="opacity-70">plain writable</span>
   </div>
   <div class="p-3 bg-purple-500/20 rounded ring-2 ring-purple-400">
     <code class="font-bold">linkedSignal()</code><br/>
@@ -418,11 +419,11 @@ Decision rule lives in everyone's head as a 2x2 grid. Show it visually.
 
 ---
 
-# linkedSignal: the naive vs the right way
+# Don’t derive values with `effect()`
 
 ````md magic-move {lines: true}
 ```typescript
-// ❌ The naive effect() version
+// ❌ Derived value hidden inside effect()
 quantity = signal(1);
 
 constructor() {
@@ -435,8 +436,8 @@ constructor() {
     });
   });
 }
-// Dependency is invisible from the field declaration.
-// Easy to write loops. Effects are for SIDE effects, not values.
+// Dependency is hidden from the field declaration.
+// Easy to create loops. Effects are for SIDE effects, not derived state.
 ```
 
 ```typescript
@@ -452,7 +453,7 @@ quantity = linkedSignal({
 // Reads like a signal, writes like a signal:
 onQuantityChanged(q: string) { this.quantity.set(parseInt(q, 10)); }
 onProductSelected(code: string) { this.selectedProduct.set(code); }
-// Source changes → quantity resets. User edits → quantity stays until next source change.
+// Source changes → quantity resets. User edits → quantity stays until then.
 ```
 ````
 
@@ -466,7 +467,7 @@ This is THE moment to slow down. The two versions side-by-side via Magic Move ma
 
 ---
 
-# 🔮 Coming: `linkedSignal({ set })` — PR #68708
+# Maybe next: `linkedSignal({ set })` (open PR)
 
 <div class="pt-2 text-sm">
 
@@ -520,29 +521,41 @@ The headline feature of v21 — and the v22 graduation
 
 # The forms story so far
 
-<div class="grid grid-cols-3 gap-4 pt-6">
+<div class="grid grid-cols-3 gap-4 pt-6 text-[0.95rem] leading-snug">
 
 <div class="p-4 bg-gray-500/10 rounded">
 
 ### Template-driven
-`[(ngModel)]`<br/>
-Two-way magic. Hard to test. Validation in template.
+
+<div class="mt-3 space-y-2">
+  <div><code>[(ngModel)]</code></div>
+  <div>Quick to start.</div>
+  <div>Logic and validation stay in the template.</div>
+</div>
 
 </div>
 
 <div class="p-4 bg-gray-500/10 rounded">
 
 ### Reactive
-`FormGroup` / `FormControl`<br/>
-Powerful, testable. RxJS-heavy. `valueChanges.pipe(takeUntilDestroyed())`. CVAs.
+
+<div class="mt-3 space-y-2">
+  <div><code>FormGroup</code> / <code>FormControl</code></div>
+  <div>Explicit and testable.</div>
+  <div>More setup code and RxJS wiring.</div>
+</div>
 
 </div>
 
 <div class="p-4 bg-purple-500/20 rounded ring-2 ring-purple-400">
 
 ### Signal Forms ⭐
-`form()` + signal data model<br/>
-Type-safe schema. Validators-as-functions. Errors are signals.
+
+<div class="mt-3 space-y-2">
+  <div><code>form()</code> + signal model</div>
+  <div>Model-first and type-safe.</div>
+  <div>Validator functions. Errors are signals.</div>
+</div>
 
 </div>
 
@@ -564,16 +577,16 @@ Frame why a third forms API exists. The duality of template-driven vs reactive w
 
 ---
 
-# Signal Forms: a canonical example
+# Signal Forms in 3 steps
 
 ````md magic-move {lines: true}
 ```typescript
-// Step 1 — your data is a signal
+// Step 1 — define the model as a signal
 private readonly credentials = signal({ email: '', password: '' });
 ```
 
 ```typescript
-// Step 2 — declare the form with schema-style validators
+// Step 2 — add schema-style validators
 import { form, required, email, minLength } from '@angular/forms/signals';
 
 protected readonly loginForm = form(this.credentials, form => {
@@ -587,7 +600,7 @@ protected readonly loginForm = form(this.credentials, form => {
 ```
 
 ```html
-<!-- Step 3 — bind in the template -->
+<!-- Step 3 — bind fields and show errors -->
 <form>
   <input [formField]="loginForm.email" />
   <input [formField]="loginForm.password" type="password" />
@@ -605,11 +618,11 @@ Three Magic Move steps. The pattern: data → schema → template. No FormGroup,
 
 ---
 
-# Reactive Forms vs Signal Forms
+# Same login form, less wiring
 
 ````md magic-move {lines: true}
 ```typescript
-// ❌ Reactive Forms — the ceremony
+// ❌ Reactive Forms — explicit form model + subscriptions
 export class LoginComponent implements OnInit, OnDestroy {
   loginForm!: FormGroup;
   private destroy$ = new Subject<void>();
@@ -635,7 +648,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 ```
 
 ```typescript
-// ✅ Signal Forms — the data IS the form
+// ✅ Signal Forms — model-first form
 export class LoginComponent {
   protected credentials = signal({ email: '', password: '' });
 
@@ -644,8 +657,8 @@ export class LoginComponent {
     required(s.password); minLength(s.password, 6);
   });
 
-  // credentials() is automatically two-way bound.
-  // No subscribe. No destroy. No CVA.
+  // credentials() stays as the source of truth.
+  // No subscribe. No teardown. Less form wiring.
 }
 ```
 ````
@@ -656,7 +669,7 @@ This is the side-by-side that lands hardest. Everyone has written the top versio
 
 ---
 
-# Signal Forms — v21 evolution
+# Signal Forms: how v21 refined it
 
 <div class="text-xs pt-2">
 
@@ -677,7 +690,7 @@ This is the side-by-side that lands hardest. Everyone has written the top versio
 <v-click>
 
 <div class="pt-4 text-sm opacity-80">
-**v22 graduates everything** above to public API — `v22.0.0-next.11` commit <code>7745365910</code>: *"graduate signal forms APIs to public API."*
+By <code>v21.2</code>, the API had mostly settled. <code>v22</code> then graduates it to public API — <code>v22.0.0-next.11</code>, commit <code>7745365910</code>.
 </div>
 
 </v-click>
@@ -688,11 +701,11 @@ Three minor releases of polish. Worth showing because it answers "is this stable
 
 ---
 
-# v22 polish #1: better numeric inputs
+# The numeric input problem
 
 <div class="text-sm pt-2">
 
-`<input type="number">` looks right but ships UX bugs: spinner controls, **mousewheel changes the value**, weird mobile keyboards. MDN explicitly recommends avoiding it.
+`<input type="number">` looks semantic, but it brings UX bugs: spinner controls, **mousewheel edits**, and inconsistent mobile keyboards. MDN recommends avoiding it.
 
 </div>
 
@@ -700,7 +713,7 @@ Three minor releases of polish. Worth showing because it answers "is this stable
 
 ````md magic-move {lines: true}
 ```html
-<!-- v21 — type="number" was the only thing that worked with number models -->
+<!-- Pre-v22 — type="number" was the practical option -->
 <input type="number" [formField]="signupForm.age" />
 
 <!-- 🐛 spinner UI nobody wants
@@ -709,7 +722,7 @@ Three minor releases of polish. Worth showing because it answers "is this stable
 ```
 
 ```html
-<!-- v22 — text input + inputmode, model stays number | null ✅ -->
+<!-- v22 — text UI + inputmode, numeric model ✅ -->
 <input
   type="text"
   inputmode="numeric"
@@ -726,7 +739,7 @@ This is a "huh, finally" moment. Every dev in the room has fought this.
 
 ---
 
-# v22 polish #1: better numeric inputs (cont.)
+# The v22 fix: text UI, numeric model
 
 ```typescript
 interface SignupFormData {
@@ -751,7 +764,7 @@ protected onAgeKeydown(event: KeyboardEvent) {
 ```
 
 <div class="text-xs opacity-70 pt-2">
-v22 auto-converts text input → number, maps empty input → <code>null</code> (not <code>''</code>).<br/>
+v22 keeps the UI as text, the model as <code>number | null</code>, and empty input as <code>null</code>.<br/>
 Commit <code>41b1410c</code>. Source: Brian Treese, <em>briantree.se/angular-signal-forms-number-inputs</em>
 </div>
 
@@ -769,26 +782,26 @@ The small stuff that adds up
 
 ---
 
-# Templates got smarter
+# Templates got nicer in v21
 
 <div class="text-sm pt-2">
 
 | Feature | Version | Example |
 |---|---|---|
-| Control flow migration auto on `ng update` | 21.0 | `*ngIf` → `@if` |
+| Control flow migration on `ng update` | 21.0 | `*ngIf` → `@if` |
 | `RegExp` literals in templates | 21.0 | `{{ /\d+/.test(id()) }}` |
-| `@defer (on viewport({ rootMargin: '50px' }))` | 21.0 | IntersectionObserver options |
+| `@defer` viewport `rootMargin` | 21.0 | IntersectionObserver options |
 | **Multi-`@case` fall-through** | 21.1 | shared branches |
-| **Spread operator** in templates | 21.1 | `[...admins]`, `sum(...counters)` |
-| **Arrow functions** in expressions | 21.2 | `(click)="count.update(n => n + 1)"` |
+| **Spread syntax** in templates | 21.1 | `[...admins]`, `sum(...counters)` |
+| **Arrow functions** in template expressions | 21.2 | `(click)="count.update(n => n + 1)"` |
 | **`instanceof`** in templates | 21.2 | `{{ x instanceof Date }}` |
-| **Exhaustive `@switch`** via `@default never` | 21.2 | TS2322 if a case is reachable |
+| **Exhaustive `@switch`** with `@default never` | 21.2 | TS2322 if a case is reachable |
 
 </div>
 
 ---
 
-# Template superpowers — v21.1 + v21.2
+# Template superpowers, in practice
 
 ```html
 <!-- v21.1: multi-case fall-through + spread -->
@@ -811,13 +824,17 @@ The small stuff that adds up
 }
 ```
 
+<div class="text-xs opacity-70 pt-2">
+Fewer throwaway component methods, more type-checked intent in the template.
+</div>
+
 <!--
 The arrow function in (click) is the moment everyone goes "wait, we can do THAT now?" Saves a ton of trivial component methods.
 -->
 
 ---
 
-# Animations: CSS-first, Angular-assisted
+# Animations: let CSS do the work
 
 ```html
 @if (isShown()) {
@@ -844,16 +861,16 @@ The arrow function in (click) is the moment everyone goes "wait, we can do THAT 
 
 <div>
 
-- `animate.enter` / `animate.leave` are **special Angular APIs** that apply CSS classes on enter/leave
-- The recommended path is **native CSS transitions or keyframes**
-- `@starting-style` is the detail that makes transition-based entry animations work
+- `animate.enter` / `animate.leave` are **Angular hooks** that add CSS classes at the right time
+- Prefer **native CSS transitions or keyframes**
+- `@starting-style` makes entry transitions work
 
 </div>
 
 <div>
 
-- Angular helps you hook into DOM lifecycle; CSS does the animation
-- Keep route transitions separate: Angular Router offers `withViewTransitions()`
+- Angular handles lifecycle; CSS handles motion
+- For route transitions, use `withViewTransitions()`
 - Router view transitions are still **developer preview**
 
 </div>
@@ -868,7 +885,7 @@ This slide is here because people still expect "Angular animations" to mean the 
 layout: two-cols-header
 ---
 
-# Angular Aria: headless accessibility primitives
+# Angular Aria: accessibility without prebuilt widgets
 
 ::left::
 
@@ -889,8 +906,8 @@ layout: two-cols-header
 
 - Install with `npm install @angular/aria`
 - Headless directives for WAI-ARIA patterns like toolbar, tabs, menu, listbox, select, and tree
-- Built-in keyboard navigation, focus management, screen-reader semantics, and RTL support
-- Best fit: custom design systems that want accessibility behavior without pre-styled widgets
+- Built-in keyboard navigation, focus management, and screen-reader semantics
+- Best fit: custom design systems that want behavior without pre-styled widgets
 
 <div class="text-xs opacity-70 pt-4">
 Think “accessibility primitives for your design system”, not “another component library”.
@@ -902,12 +919,12 @@ Toolbar is the most legible example on one slide: it shows why Angular Aria exis
 
 ---
 
-# OnPush is the default in v22
+# v22 makes OnPush the default
 
 <div class="pt-2 text-sm">
 
-The v22 docs now say it plainly: <code>ChangeDetectionStrategy.OnPush</code> is enabled by default.<br/>
-<code>Eager</code> is the new explicit name for the old always-check strategy, and <code>Default</code> is now a deprecated alias.
+The rule in v22 is simple: <code>ChangeDetectionStrategy.OnPush</code> is now the default.<br/>
+<code>Eager</code> is the explicit name for the old always-check strategy, and <code>Default</code> becomes a deprecated alias.
 
 </div>
 
@@ -928,7 +945,7 @@ enum ChangeDetectionStrategy {
 
 <div class="pt-4 text-sm">
 
-`ng update` to v22 will:
+`ng update` to v22 keeps existing behavior by:
 
 1. Add `changeDetection: ChangeDetectionStrategy.Eager` to components **without** an explicit setting
 2. Rename `ChangeDetectionStrategy.Default` → `Eager` in your code
@@ -942,7 +959,7 @@ enum ChangeDetectionStrategy {
 
 <div class="pt-4 p-3 border-l-4 border-red-500 bg-red-50/10 text-sm">
 
-⚠️ **Library footgun:** third-party components without explicit `changeDetection` will **silently** become OnPush in v22. Audit your dependencies. Open issues against libs that omit it.
+⚠️ **Library footgun:** if a library ships components without explicit `changeDetection`, they can flip to OnPush under v22. Audit your dependencies and upstream fixes.
 
 </div>
 
@@ -950,10 +967,10 @@ enum ChangeDetectionStrategy {
 
 ---
 
-# `injectAsync()` — lazy services in v22
+# `injectAsync()`: lazy services without injector boilerplate
 
-Lazy-load a service via dynamic import, still go through the injector. **Stable since v22.0.**
-Use it with auto-provided services — root-provided `Injectable`s or `@Service()`-based services.
+**Stable in v22.** Import on demand, still resolve through Angular DI.
+Best fit: root-provided services you only need on specific interactions.
 
 ````md magic-move {lines: true}
 ```typescript
@@ -1006,11 +1023,11 @@ layout: section
 
 # Part 5 — Testing
 
-Vitest is the new default — but which Vitest?
+The default changed; the trade-offs did not disappear
 
 ---
 
-# Vitest is now the default
+# Vitest is the default now
 
 <div class="grid grid-cols-2 gap-6 pt-4 text-sm">
 
@@ -1020,7 +1037,7 @@ Vitest is the new default — but which Vitest?
 
 - `@angular/build:unit-test` builder is **stable**
 - Vitest is the **default** runner
-- `web-test-runner` + `jest` experimental builders → **deprecated, removed in v22**
+- `web-test-runner` + `jest` experimental builders → **deprecated in v21, removed in v22**
 - `ng g @schematics/angular:refactor-jasmine-vitest`
 - Karma still works: `ng new --test-runner=karma`
 
@@ -1028,11 +1045,11 @@ Vitest is the new default — but which Vitest?
 
 <div>
 
-### The catch
+### What to watch for
 
-- **`fakeAsync` / `flush` / `waitForAsync` don't work** — no Zone.js patches for Vitest. Use native `async` and Vitest fake timers.
-- Migration leaves a TODO + generates a Markdown report
-- Browser Mode supported via `ng add @vitest/browser-playwright` / `webdriverio`
+- **`fakeAsync` / `flush` / `waitForAsync` don't carry over** — no Zone.js patches in Vitest. Use native `async` and fake timers.
+- Migration leaves a TODO and generates a Markdown report
+- Browser Mode works via `ng add @vitest/browser-playwright` / `webdriverio`
 
 </div>
 
@@ -1044,7 +1061,7 @@ The fakeAsync break is the biggest practical migration blocker. Mention it expli
 
 ---
 
-# Built-in vs `@analogjs/vitest-angular`
+# Angular built-in vs `@analogjs/vitest-angular`
 
 <div class="text-xs pt-2">
 
@@ -1066,7 +1083,7 @@ The fakeAsync break is the biggest practical migration blocker. Mention it expli
 
 <div class="pt-4 text-sm">
 
-**The architectural reason:** Angular's builder constructs Vitest config **in-memory** from `angular.json`. The VS Code Vitest extension can't discover an in-memory config — so no gutter icons, no per-test runs.
+**The key difference:** Angular's builder constructs Vitest config **in-memory** from `angular.json`. The VS Code Vitest extension can't see that config — so no gutter icons and no per-test runs.
 
 </div>
 
@@ -1074,7 +1091,7 @@ The fakeAsync break is the biggest practical migration blocker. Mention it expli
 
 ---
 
-# Decision matrix
+# Which Vitest should you pick?
 
 <div class="grid grid-cols-3 gap-4 pt-8">
 
@@ -1117,7 +1134,7 @@ Don't be evangelistic. Both are fine. The choice is driven by VS Code Test Explo
 
 ---
 
-# Testing migrations — 20 → 22
+# Testing migration: 20 → 22
 
 <div class="pt-2 text-sm opacity-80">
   <strong>The story:</strong> first make fragile tests fail honestly, then switch the runner, then aim for tests that don't care whether Zone.js is around.
@@ -1173,7 +1190,7 @@ Where Angular is genuinely ahead
 
 ---
 
-# Angular's AI investment — three layers
+# Angular's AI story: three layers
 
 <div class="pt-4">
 
@@ -1199,7 +1216,7 @@ Where Angular is genuinely ahead
   <span class="text-2xl">📊</span>
   <div>
     <strong>Measurable quality — Web Codegen Scorer</strong><br/>
-    Closed loop: prompt → scorer → iterate until 97–100/100. The reason "follows current Angular best practices" actually means something.
+    Closed loop: prompt → scorer → iterate until 97–100/100. This is why “follows current Angular best practices” can actually be measured.
   </div>
 </div>
 
@@ -1209,7 +1226,7 @@ Where Angular is genuinely ahead
 
 ---
 
-# The MCP server (`ng mcp`)
+# `ng mcp`: the Angular MCP server
 
 <div class="text-xs pt-2">
 
@@ -1229,7 +1246,7 @@ Where Angular is genuinely ahead
 <v-click>
 
 <div class="pt-4 text-sm">
-Configured per-IDE: <code>.vscode/mcp.json</code>, <code>~/.cursor/mcp.json</code>, JetBrains AI Assistant settings. New workspaces get a <code>.vscode/mcp.json.template</code> pre-configured.
+Configured per IDE: <code>.vscode/mcp.json</code>, <code>~/.cursor/mcp.json</code>, or JetBrains AI Assistant settings. New workspaces already get a <code>.vscode/mcp.json.template</code>.
 </div>
 
 </v-click>
@@ -1240,7 +1257,7 @@ Configured per-IDE: <code>.vscode/mcp.json</code>, <code>~/.cursor/mcp.json</cod
 
 ---
 
-# WebMCP — your app is a tool now
+# WebMCP: your app becomes a tool
 
 <div class="grid grid-cols-2 gap-6 pt-4 text-sm">
 
@@ -1274,7 +1291,7 @@ Watches it happen without typing.
 <v-click>
 
 <div class="pt-4 text-sm">
-Both use the same MCP protocol family, opposite directions. Built on the emerging W3C <code>navigator.modelContext</code> API — framework-agnostic, the browser is the broker.
+Same MCP family, opposite direction. Built on the emerging W3C <code>navigator.modelContext</code> API — framework-agnostic, with the browser as broker.
 </div>
 
 </v-click>
@@ -1323,7 +1340,7 @@ Tools run inside Angular's injection context — <code>inject()</code>, signals,
 
 ---
 
-# Killer integration: Signal Forms auto-generate tools
+# Signal Forms can auto-generate tools
 
 ```typescript
 // app.config.ts
@@ -1366,7 +1383,7 @@ Status: <strong>experimental</strong> in v22. WebMCP spec itself is in flux. Tre
 
 ---
 
-# Adjacent ecosystem — NOT v22 features
+# Related standards — not Angular v22 features
 
 <div class="text-xs pt-2">
 
@@ -1407,7 +1424,7 @@ The honorable mentions
 
 ---
 
-# Other things in v21
+# v21: router, HTTP, and DX polish
 
 <div class="grid grid-cols-2 gap-6 pt-4 text-sm">
 
@@ -1444,7 +1461,7 @@ The honorable mentions
 
 ---
 
-# Other things coming in v22
+# v22: stable resources, new defaults
 
 <div class="grid grid-cols-2 gap-6 pt-4 text-sm">
 
@@ -1522,13 +1539,13 @@ layout: center
 class: text-center
 ---
 
-# 🎯 Tips & Tricks
+# 🎯 Monday morning takeaways
 
-Practical takeaways for Monday morning
+What to do first when you're back at work
 
 ---
 
-# Tips & Tricks
+# What to do first
 
 <v-clicks>
 
@@ -1551,7 +1568,7 @@ Call out the official migrations reference here: Angular ships named schematics 
 
 ---
 
-# Decision matrix — which version, when?
+# Upgrade decision matrix
 
 <div class="text-sm pt-4">
 
