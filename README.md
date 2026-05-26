@@ -71,6 +71,14 @@ The deck uses the `seriph` theme and standard Slidev features such as Markdown s
 
 This project includes a dedicated GitHub Pages setup:
 
+## License
+
+This repository is currently published as **UNLICENSED / all rights reserved**.
+See [`LICENSE`](./LICENSE) for details.
+
+Third-party names, logos, trademarks, and brand assets remain the property of
+their respective owners.
+
 - Entry file: `slides-pages.md`
 - Workflow: `.github/workflows/deploy-pages.yml`
 - Local Pages build: `pnpm run build:pages`
