@@ -79,7 +79,8 @@ The **graduation** release:
 - Signal Forms → **stable**
 - **OnPush** as default change detection
 - `resource()`, `rxResource()`, `httpResource()` → **stable**
-- `injectAsync()` **stable**
+- `injectAsync()` **Developer Preview**
+- `@Service()` **public API**
 - WebMCP for agentic UI
 - FetchBackend default for `HttpClient`
 
@@ -969,7 +970,7 @@ enum ChangeDetectionStrategy {
 
 # `injectAsync()`: lazy services without injector boilerplate
 
-**Stable in v22.** Import on demand, still resolve through Angular DI.
+**Developer Preview in v22.** Import on demand, still resolve through Angular DI.
 Best fit: root-provided services you only need on specific interactions.
 
 ````md magic-move {lines: true}
@@ -1015,6 +1016,7 @@ export class PostEditorComponent {
 
 <!--
 Real bundle-size wins. Markdown editors, syntax highlighters, charting libs, PDF generators are the canonical wins.
+Mention that @Service() also appears in the v22 public API as a service-focused decorator, but keep @Injectable() as the documented default until the final v22 docs make migration guidance explicit.
 -->
 
 ---
@@ -1487,7 +1489,7 @@ The honorable mentions
 
 - `resource()` / `rxResource()` / `httpResource()` are **stable**
 - `httpResource()` is eager and read-oriented; keep plain `HttpClient` for mutations
-- `ResourceSnapshot<T>` + `resourceFromSnapshots()` round out composition
+- `ResourceSnapshot<T>` + `resourceFromSnapshots()` keep old data visible while new data loads
 
 ### Selectorless components
 
@@ -1502,6 +1504,48 @@ The honorable mentions
 </div>
 
 </div>
+
+---
+
+# Small v22 wins worth caring about
+
+<div class="grid grid-cols-2 gap-4 pt-2 text-[0.86rem] leading-snug">
+
+<div v-click class="rounded-xl border border-white/10 bg-sky-500/10 p-3">
+  <div class="font-semibold">Router signals</div>
+  <div class="mt-1"><code>router.currentNavigation()</code> is a signal — loading bars without subscribing to router events.</div>
+</div>
+
+<div v-click class="rounded-xl border border-white/10 bg-purple-500/10 p-3">
+  <div class="font-semibold">Signal Forms polish</div>
+  <div class="mt-1">Field <code>debounce()</code>, async validators, and HTTP validators replace common <code>valueChanges + switchMap</code> plumbing.</div>
+</div>
+
+<div v-click class="rounded-xl border border-white/10 bg-emerald-500/10 p-3">
+  <div class="font-semibold">Resources compose</div>
+  <div class="mt-1"><code>ResourceSnapshot</code> + <code>resourceFromSnapshots()</code> means “keep previous value while reloading” without manual cache state.</div>
+</div>
+
+<div v-click class="rounded-xl border border-white/10 bg-orange-500/10 p-3">
+  <div class="font-semibold">DI gets more focused</div>
+  <div class="mt-1"><code>injectAsync()</code> lazy-loads expensive services; <code>@Service()</code> appears as public API, but <code>@Injectable()</code> remains the safe documented default.</div>
+</div>
+
+<div v-click class="rounded-xl border border-white/10 bg-rose-500/10 p-3">
+  <div class="font-semibold">HTTP progress is explicit</div>
+  <div class="mt-1"><code>reportUploadProgress</code> / <code>reportDownloadProgress</code> replace the vague old <code>reportProgress</code> boolean.</div>
+</div>
+
+<div v-click class="rounded-xl border border-white/10 bg-cyan-500/10 p-3">
+  <div class="font-semibold">Route-scoped agent tools</div>
+  <div class="mt-1">WebMCP tools on routes need injector auto-cleanup, otherwise agents can see tools from pages the user already left.</div>
+</div>
+
+</div>
+
+<!--
+This is the practical "small stuff" slide: a grab bag of features that are too small for their own section but useful in real apps. Keep the tone pragmatic: adopt these opportunistically, not via a big-bang migration.
+-->
 
 ---
 
