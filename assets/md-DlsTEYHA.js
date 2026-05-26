@@ -1,0 +1,5 @@
+import{$ as e,B as t,D as n,b as r,bt as i,v as a,vt as o,y as s}from"./modules/shiki-CrcqEQc-.js";import{nt as c,rt as l}from"./index-CGfJ-W0U.js";import{t as u}from"./slidev/default-YyD5F-DF.js";var d={__name:`slides.md__slidev_2`,setup(d){let{$slidev:f,$nav:p,$clicksContext:m,$clicks:h,$page:g,$renderContext:_,$frontmatter:v}=l();return m.setup(),(l,d)=>(t(),s(u,i(n(o(c)(o(v),1))),{default:e(()=>[d[0]||=a(`h1`,null,`Angular 21 & 22`,-1),d[1]||=a(`p`,null,`What’s new — and what’s coming`,-1),d[2]||=a(`img`,{src:`/presentation-angular-updates/assets/Angular%20Wordmark%20Gradient-BJRS0dVN.png`,alt:`Angular`,class:`mx-auto mt-6 h-18 w-auto`},null,-1),r(` <div class="pt-12">
+  <span class="px-2 py-1 rounded cursor-pointer bg-white/10 hover:bg-white/20" @click="$slidev.nav.next">
+    Press space to start <carbon:arrow-right class="inline"/>
+  </span>
+</div> `),d[3]||=a(`div`,{class:`abs-br m-6 text-sm opacity-50`},` v21.2.14 stable · v22.0.0-rc.1 · May 2026 `,-1)]),_:1},16))}};export{d as default};
