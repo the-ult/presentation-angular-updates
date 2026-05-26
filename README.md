@@ -71,14 +71,6 @@ The deck uses the `seriph` theme and standard Slidev features such as Markdown s
 
 This project includes a dedicated GitHub Pages setup:
 
-## License
-
-This repository is currently published as **UNLICENSED / all rights reserved**.
-See [`LICENSE`](./LICENSE) for details.
-
-Third-party names, logos, trademarks, and brand assets remain the property of
-their respective owners.
-
 - Entry file: `slides-pages.md`
 - Workflow: `.github/workflows/deploy-pages.yml`
 - Local Pages build: `pnpm run build:pages`
@@ -92,11 +84,19 @@ To enable GitHub Pages deployment:
 2. Open the repository settings.
 3. Go to **Pages**.
 4. Set **Source** to **GitHub Actions**.
-5. Push to `main` or run the workflow manually from the **Actions** tab.
+5. Push to `main` to deploy automatically, or run the workflow manually from the **Actions** tab.
 
 ### Other hosting options
 
 `netlify.toml` and `vercel.json` are included if you want to deploy the deck outside GitHub Pages with cleaner SPA routing.
+
+## License
+
+This repository is currently published as **UNLICENSED / all rights reserved**.
+See [`LICENSE`](./LICENSE) for details.
+
+Third-party names, logos, trademarks, and brand assets remain the property of
+their respective owners.
 
 ## Built with Slidev
 
