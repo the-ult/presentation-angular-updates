@@ -1,0 +1,105 @@
+:root {
+  --angular-red: #dd0031;
+  --angular-magenta: #c300ff;
+  --angular-purple: #7b3ff2;
+  --angular-surface: #0b0c12;
+  --angular-surface-soft: #131726;
+  --angular-text: #f6f8ff;
+  --angular-muted: #c5c9dd;
+  --slidev-theme-primary: var(--angular-red);
+}
+
+#slide-content {
+  background:
+    radial-gradient(1100px 500px at 15% -20%, rgba(221, 0, 49, 0.25), transparent 60%),
+    radial-gradient(1200px 600px at 100% 0%, rgba(123, 63, 242, 0.28), transparent 60%),
+    linear-gradient(180deg, #161a2a 0%, #0f1220 100%);
+}
+
+.slidev-layout {
+  color: var(--angular-text);
+  position: relative;
+}
+
+.slidev-layout::after {
+  content: '';
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0.7rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  opacity: 0.32;
+  pointer-events: none;
+  background-image: url('/assets/Angular%20Gradient.png');
+  background-repeat: no-repeat;
+  background-size: contain;
+  filter: drop-shadow(0 4px 16px rgba(195, 0, 255, 0.6));
+}
+
+.slidev-layout h1,
+.slidev-layout h2 {
+  background: linear-gradient(90deg, #ff2e63 0%, #db2bff 48%, #8a4dff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
+}
+
+h3 {
+  color: #c97dff;
+}
+
+p,
+li,
+td,
+th,
+blockquote {
+  color: var(--angular-text);
+}
+
+table {
+  border-color: rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+thead tr {
+  background: linear-gradient(90deg, rgba(221, 0, 49, 0.25), rgba(123, 63, 242, 0.25));
+}
+
+tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+code,
+kbd {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.4rem;
+}
+
+.slidev-layout h1 code,
+.slidev-layout h2 code {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+a {
+  color: #f28cff;
+}
+
+a:hover {
+  color: #ff8da7;
+}
+
+blockquote {
+  border-left: 4px solid rgba(221, 0, 49, 0.8);
+  padding-left: 0.85rem;
+  opacity: 0.95;
+}
