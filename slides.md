@@ -38,7 +38,7 @@ What's new — and what's coming
 </div> -->
 
 <div class="abs-br m-6 text-sm opacity-50">
-  v21.2.14 stable · v22.0.0-rc.1 · May 2026
+  v21.2.14 stable · v22.0.0 stable · June 2026
 </div>
 
 <!--
@@ -52,7 +52,7 @@ layout: center
 class: text-center
 ---
 
-# Where we are in mid-2026
+# Where we are now
 
 <div class="grid grid-cols-2 gap-8 pt-8 text-left">
 
@@ -73,7 +73,7 @@ Latest stable: **21.2.14**
 
 <div>
 
-### Angular 22 — RC, GA ~June 2026
+### Angular 22 — Released (June 2026)
 
 The **graduation** release:
 - Signal Forms → **stable**
@@ -84,7 +84,7 @@ The **graduation** release:
 - WebMCP for agentic UI
 - FetchBackend default for `HttpClient`
 
-Current: **22.0.0-rc.1** (May 20, 2026)
+Current major: **22.x**
 
 </div>
 
@@ -500,14 +500,14 @@ protected readonly filterForm = form(this.filter);
 <v-click>
 
 <div class="pt-2 text-sm opacity-80">
-If it lands → read-only stores + Signal Forms become a one-liner.<br/>
-If it slips → community <code>delegatedSignal</code> helper remains the workaround.
+Until this lands → community <code>delegatedSignal</code> remains the practical workaround.<br/>
+After it lands → read-only stores + Signal Forms becomes a one-liner.
 </div>
 
 </v-click>
 
 <!--
-Hedge this honestly: PR is OPEN, not merged. Three explicit callouts so you don't accidentally claim it shipped. If you give this talk after May 2026 GA, check the PR status first.
+State this plainly: PR is OPEN and not merged. Keep the three explicit callouts so nobody hears this as shipped.
 -->
 
 ---
@@ -1493,8 +1493,8 @@ The honorable mentions
 
 ### Selectorless components
 
-- Watch this space — RFC still in flux
-- Realistic v22: experimental at most
+- Still evolving
+- Treat as experimental for now
 
 ### Compiler
 
@@ -1573,8 +1573,8 @@ This is the practical "small stuff" slide: a grab bag of features that are too s
 - **`web-test-runner` + `jest` experimental builders REMOVED**
 - **`HttpClient.reportProgress` deprecated** → split into upload/download
 - **Signal Forms `min`/`max`** no longer accept strings
-- **Node.js 26 supported**; final word on Node 20 awaits GA
-- **Selectorless** still in flux — APIs may shift right up to GA
+- **Node.js 26 supported**; verify your team baseline from the current v22 release notes
+- **Selectorless** still in flux — APIs may continue to evolve across minors
 
 </v-clicks>
 
@@ -1595,7 +1595,7 @@ What to do first when you're back at work
 
 - ✅ **Start with `ng update`; finish with the named schematics** — Angular already ships first-party migrations for control flow, `CommonModule`, `NgClass` / `NgStyle`, router testing, and Jasmine → Vitest.
 - ✅ **Put `ng mcp` in every IDE** — `.vscode/mcp.json` makes the AI stop guessing.
-- ✅ **Dry-run v22 on one real feature** — `onpush_zoneless_migration` is the dress rehearsal.
+- ✅ **Roll out v22 on one real feature first** — `onpush_zoneless_migration` is still the safest dress rehearsal.
 - 🚫 **Stop importing `CommonModule` everywhere** — run `common-to-standalone`.
 - 🚫 **Stop reaching for `NgClass` / `NgStyle`** — run `ngclass-to-class` / `ngstyle-to-style`, then stay on `[class]` / `[style]`.
 - 🚫 **Stop writing new `*ngIf` / `*ngFor`** — run `control-flow`, then stay on `@if` / `@for` with `track`.
@@ -1619,11 +1619,11 @@ Call out the official migrations reference here: Angular ships named schematics 
 | Where you are | What to do |
 |---|---|
 | **v17 / v18** | Go **one major at a time** — `(17 →) 18 → 19 → 20 → 21`. Don't skip straight to v20. |
-| **v19** | Upgrade **now** — EOL May 19, 2026. No more security patches. |
+| **v19** | Upgrade **immediately** — v19 is EOL and no longer receives security patches. |
 | **v20** | Direct upgrade to v21 — 2–8 hours for most apps. |
 | **v21.0 / 21.1** | Bump to **21.2.14** (latest patches, Signal Forms compat bridge). |
 | **v16 or earlier** | Treat as 4–12 week re-architecture. Lean on MCP `modernize` tool. |
-| **Planning v22** | Start dry-runs now. Audit libs for explicit `changeDetection`, then pilot `injectAsync()` / resource adoption on one feature. |
+| **Adopting v22** | Start with one production slice. Audit libs for explicit `changeDetection`, then pilot `injectAsync()` / resource adoption on that slice. |
 
 </div>
 
