@@ -27,7 +27,7 @@ seoMeta:
 
 # Angular 21 & 22
 
-What's new — and what's coming
+What's new — and what matters
 
 <img src="/assets/Angular Wordmark Gradient.png" alt="Angular" class="mx-auto mt-6 h-18 w-auto" />
 
@@ -42,7 +42,8 @@ What's new — and what's coming
 </div>
 
 <!--
-~20–25 minute talk, full version first. Audience: medium-to-advanced Angular devs who want to get up to date.
+~35–45 minute talk if covered fully; easy to trim toward ~30 by skipping a few comparison slides.
+Audience: medium-to-advanced Angular devs who want to get up to date.
 Three big stories: zoneless defaults, Signal Forms graduating, WebMCP / agentic UI.
 Optional skips if we're tight: linkedSignal PR, adjacent ecosystem, honorable mentions.
 -->
@@ -208,7 +209,7 @@ Walk through the official notification mechanisms slowly. If people remember one
 
 ---
 
-# Bootstrap: before vs now
+# Bootstrap: before vs after
 
 ````md magic-move {lines: true}
 ```typescript
@@ -246,6 +247,10 @@ bootstrapApplication(AppComponent, {
 // Keep `zone.js` in the build if you opt back in.
 ```
 ````
+
+<div class="text-xs opacity-70 pt-2">
+The migration shape is simple once you separate versions: in <code>v20</code> you add <code>provideZonelessChangeDetection()</code>, in <code>v21+</code> you usually remove overrides, and only legacy apps opt back into Zone.js explicitly.
+</div>
 
 <!--
 Magic Move animates between four states. Click through them slowly. The key distinction: v20 is the version where you add `provideZonelessChangeDetection()`. In v21+, zoneless is already the default, so the migration is mostly removing overrides and removing ZoneJS from the build. The last panel is the safety net for teams that can't move yet.
@@ -459,7 +464,7 @@ onProductSelected(code: string) { this.selectedProduct.set(code); }
 ````
 
 <div v-click class="text-sm opacity-70 pt-2">
-Example adapted from Vasco Cavalheiro, <em>angular-university.io/angular-linkedsignal</em>
+Example adapted from Vasco Cavalheiro, <a href="https://angular-university.io/angular-linkedsignal"><em>angular-university.io/angular-linkedsignal</em></a>
 </div>
 
 <!--
@@ -619,7 +624,15 @@ Three Magic Move steps. The pattern: data → schema → template. No FormGroup,
 
 ---
 
-# Same login form, less wiring
+# Login form: before vs after
+
+<div class="text-sm pt-2 opacity-80">
+Use case: a common auth/profile form where the model itself should stay the source of truth.
+</div>
+
+<div class="text-xs pt-2 opacity-60">
+Step 1 in the progression: <code>Reactive Forms</code> → <code>Signal Forms</code>
+</div>
 
 ````md magic-move {lines: true}
 ```typescript
@@ -664,6 +677,10 @@ export class LoginComponent {
 ```
 ````
 
+<div class="text-xs opacity-70 pt-2">
+The real win is not just fewer lines — the signal model becomes the single source of truth, and the usual <code>valueChanges</code> subscription + teardown boilerplate disappears.
+</div>
+
 <!--
 This is the side-by-side that lands hardest. Everyone has written the top version dozens of times.
 -->
@@ -698,6 +715,110 @@ By <code>v21.2</code>, the API had mostly settled. <code>v22</code> then graduat
 
 <!--
 Three minor releases of polish. Worth showing because it answers "is this stable enough yet?" Yes — the API surface stopped moving by 21.2.
+-->
+
+---
+
+# Signal Forms: what changed at stabilization
+
+<div class="text-xs pt-2 opacity-60">
+Step 2 in the progression: <code>experimental Signal Forms</code> → <code>stable, production-shaped Signal Forms</code>
+</div>
+
+<div class="grid grid-cols-2 gap-6 pt-4 text-sm">
+
+<div>
+
+- `touched` is now an **input**, with `touch()` as the output for custom controls
+- `markAsTouched()` now marks **descendants too**
+- Dynamic behaviors and validators now consistently use a **`when`** option
+- `getError()` gives typed, targeted error access
+
+</div>
+
+<div>
+
+- `reloadValidation()` re-runs async validators
+- `debounce(field, 'blur')` is now supported
+- `validateAsync()` / `validateHttp()` get their own `debounce` option
+- `minDate()` / `maxDate()` arrive, and legacy custom controls interop improves
+
+</div>
+
+</div>
+
+<div class="text-xs opacity-70 pt-4">
+These are the kinds of changes that make v22 feel less like “same API, now stable” and more like “same API, now genuinely production-shaped.”
+</div>
+
+<!--
+This is the missing “why stabilization matters” slide. It turns the v22 Signal Forms story from a badge into practical migration guidance.
+-->
+
+---
+
+# Async validation: before vs after
+
+<div class="text-sm pt-2 opacity-80">
+Use case: username or email availability checks without hand-rolling a <code>valueChanges</code> pipeline.
+</div>
+
+<div class="text-xs pt-2 opacity-60">
+Step 3 in the progression: <code>manual RxJS validation glue</code> → <code>validateHttp()</code>
+</div>
+
+````md magic-move {lines: true}
+```typescript
+// Before — Reactive Forms + manual RxJS debounce pipeline
+export class SignupComponent {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly fb = inject(FormBuilder);
+  private readonly http = inject(HttpClient);
+
+  protected readonly form = this.fb.group({
+    email: ['', [Validators.required, Validators.email]]
+  });
+
+  protected readonly emailTaken = signal(false);
+
+  constructor() {
+    this.form.controls.email.valueChanges.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef),
+      switchMap(email => this.http.get<{ taken: boolean }>(
+        `/api/users/check?email=${email}`
+      ))
+    ).subscribe(result => this.emailTaken.set(result.taken));
+  }
+}
+```
+
+```typescript
+// v22 — Signal Forms + validateHttp() with built-in debounce
+export class SignupComponent {
+  protected readonly model = signal({ email: '' });
+
+  protected readonly signupForm = form(this.model, form => {
+    required(form.email);
+    email(form.email);
+
+    validateHttp(form.email, {
+      request: email => `/api/users/check?email=${encodeURIComponent(email.value())}`,
+      debounce: 400,
+      errors: result => result.taken ? { emailTaken: true } : null,
+    });
+  });
+}
+```
+````
+
+<div class="text-xs opacity-70 pt-2">
+The v22 story is not just “forms are stable” — it’s “common <code>valueChanges + debounceTime + switchMap</code> glue becomes framework-shaped.”
+</div>
+
+<!--
+This slide makes the Signal Forms validation story concrete. The audience should immediately see how much custom RxJS ceremony disappears for common async validators.
 -->
 
 ---
@@ -766,7 +887,7 @@ protected onAgeKeydown(event: KeyboardEvent) {
 
 <div class="text-xs opacity-70 pt-2">
 v22 keeps the UI as text, the model as <code>number | null</code>, and empty input as <code>null</code>.<br/>
-Commit <code>41b1410c</code>. Source: Brian Treese, <em>briantree.se/angular-signal-forms-number-inputs</em>
+Commit <code>41b1410c</code>. Source: Brian Treese, <a href="https://briantree.se/angular-signal-forms-number-inputs"><em>briantree.se/angular-signal-forms-number-inputs</em></a>
 </div>
 
 <!--
@@ -777,9 +898,9 @@ The keydown handler is the MDN-recommended pattern. Browsers are inconsistent at
 layout: section
 ---
 
-# Part 4 — Templates & DX
+# Part 4 — Templates, UI & core APIs
 
-The small stuff that adds up
+The day-to-day code changes around the big stories
 
 ---
 
@@ -906,7 +1027,9 @@ layout: two-cols-header
 ::right::
 
 - Install with `npm install @angular/aria`
+- **Production-ready in v22**
 - Headless directives for WAI-ARIA patterns like toolbar, tabs, menu, listbox, select, and tree
+- Signal Forms integration + test harnesses are part of the v22 story
 - Built-in keyboard navigation, focus management, and screen-reader semantics
 - Best fit: custom design systems that want behavior without pre-styled widgets
 
@@ -973,6 +1096,14 @@ enum ChangeDetectionStrategy {
 **Developer Preview in v22.** Import on demand, still resolve through Angular DI.
 Best fit: root-provided services you only need on specific interactions.
 
+<div class="text-sm pt-2 opacity-80">
+Use case: a heavy service like PDF export, markdown rendering, or charts that should load only after user intent.
+</div>
+
+<div class="text-xs pt-2 opacity-60">
+Step 1 in the progression: <code>inject()</code> / <code>Injector.get()</code> boilerplate → <code>injectAsync()</code>
+</div>
+
 ````md magic-move {lines: true}
 ```typescript
 // Before — Injector.get() + manual promise caching
@@ -1014,9 +1145,71 @@ export class PostEditorComponent {
 ```
 ````
 
+<div class="text-xs opacity-70 pt-2">
+Use <code>injectAsync()</code> when the dependency is off the critical path but should still come from Angular DI. Keep plain <code>inject()</code> for services every render path needs immediately.
+</div>
+
 <!--
 Real bundle-size wins. Markdown editors, syntax highlighters, charting libs, PDF generators are the canonical wins.
 Mention that @Service() also appears in the v22 public API as a service-focused decorator, but keep @Injectable() as the documented default until the final v22 docs make migration guidance explicit.
+-->
+
+---
+
+# Root singleton: before vs after
+
+<div class="text-sm pt-2 opacity-80">
+Use case: a root-provided service or store that mostly exposes read state to the rest of the app.
+</div>
+
+<div class="text-xs pt-2 opacity-60">
+Step 2 → 3 in the progression: <code>@Injectable({ providedIn: 'root' })</code> → <code>@Service()</code> → <code>@Service() + httpResource()</code>
+</div>
+
+````md magic-move {lines: true}
+```typescript
+// Before — classic root singleton
+@Injectable({ providedIn: 'root' })
+export class UserStore {
+  private readonly http = inject(HttpClient);
+
+  load() {
+    return this.http.get<User[]>('/api/users');
+  }
+}
+```
+
+```typescript
+// v22 — same intent, more explicit name
+@Service()
+export class UserStore {
+  private readonly http = inject(HttpClient);
+
+  load() {
+    return this.http.get<User[]>('/api/users');
+  }
+}
+```
+
+```typescript
+// Even better — if this singleton is really a read store
+@Service()
+export class UserStore {
+  readonly selectedUserId = signal(42);
+
+  readonly user = httpResource<User>(() =>
+    `/api/users/${this.selectedUserId()}`
+  );
+}
+```
+````
+
+<div class="text-xs opacity-70 pt-2">
+For the common “auto-provided root singleton” case, <code>@Service()</code> says the thing more clearly. If that singleton really behaves like a signal-driven read store, exposing <code>httpResource()</code> can be even nicer. If you need custom provider scope, imperative mutations, or other DI options, <code>@Injectable()</code> and plain <code>HttpClient</code> still stay in the toolbox.
+</div>
+
+<!--
+Keep this pragmatic. The point is naming clarity for the common case, not religious conversion away from @Injectable. The third state is intentionally narrower: only use it when the singleton owns a signal-driven read model.
 -->
 
 ---
@@ -1049,7 +1242,8 @@ The default changed; the trade-offs did not disappear
 
 ### What to watch for
 
-- **`fakeAsync` / `flush` / `waitForAsync` don't carry over** — no Zone.js patches in Vitest. Use native `async` and fake timers.
+- **Better migration bridge in v22:** add `zone.js/plugins/vitest-patch` if you need `fakeAsync` / `flush` / `waitForAsync` to keep working temporarily.
+- Long-term target is still native `async` + Vitest fake timers.
 - Migration leaves a TODO and generates a Markdown report
 - Browser Mode works via `ng add @vitest/browser-playwright` / `webdriverio`
 
@@ -1058,7 +1252,7 @@ The default changed; the trade-offs did not disappear
 </div>
 
 <!--
-The fakeAsync break is the biggest practical migration blocker. Mention it explicitly.
+The story changed in v22: fakeAsync is no longer a hard stop, it's a temporary bridge. Mention the patch, then recommend migrating away from it.
 -->
 
 ---
@@ -1158,7 +1352,7 @@ Don't be evangelistic. Both are fine. The choice is driven by VS Code Test Explo
   <div class="mt-2 text-lg font-semibold">Switch the runner on purpose</div>
   <ul class="mt-3 space-y-2">
     <li>Karma/Jasmine → Angular's builder + schematic</li>
-    <li>Jest → migrate gradually, then replace Zone helpers with native <code>async</code></li>
+    <li>Use <code>zone.js/plugins/vitest-patch</code> as a bridge, then replace Zone helpers with native <code>async</code></li>
   </ul>
 </div>
 
@@ -1202,7 +1396,7 @@ Where Angular is genuinely ahead
   <span class="text-2xl">📄</span>
   <div>
     <strong>Curated context for LLMs</strong><br/>
-    <code>angular.dev/llms.txt</code>, <code>llms-full.txt</code>, copy-paste system prompts at <code>angular.dev/ai/develop-with-ai</code>
+    <a href="https://angular.dev/llms.txt"><code>angular.dev/llms.txt</code></a>, <a href="https://angular.dev/llms-full.txt"><code>llms-full.txt</code></a>, copy-paste system prompts at <a href="https://angular.dev/ai/develop-with-ai"><code>angular.dev/ai/develop-with-ai</code></a>
   </div>
 </div>
 
@@ -1251,6 +1445,10 @@ Where Angular is genuinely ahead
 Configured per IDE: <code>.vscode/mcp.json</code>, <code>~/.cursor/mcp.json</code>, or JetBrains AI Assistant settings. New workspaces already get a <code>.vscode/mcp.json.template</code>.
 </div>
 
+<div class="pt-3 text-xs opacity-70">
+Angular Agent Skills have been around since the v21-era AI push, but v22 is where the Angular team makes them feel much more official and prominently spotlights <code>angular-developer</code> and <code>angular-new-app</code> via <code>github.com/angular/skills</code>.
+</div>
+
 </v-click>
 
 <!--
@@ -1281,8 +1479,8 @@ Your IDE asks the Angular CLI for examples, docs, migrations.
 
 AI agent ↔ **your live app in the browser**
 
-User: *"add 'feed the cats' to my to-do list."*<br/>
-Watches it happen without typing.
+User: *"complete checkout with my saved shipping address and next-day delivery."*<br/>
+The agent fills the wizard through your app's real business flow.
 
 → Makes your **running app** agent-callable.
 
@@ -1298,46 +1496,107 @@ Same MCP family, opposite direction. Built on the emerging W3C <code>navigator.m
 
 </v-click>
 
+<v-click>
+
+<div class="pt-4 text-sm opacity-85">
+Best fit: <strong>structured user intent</strong> — checkout, registration, search, exports, booking flows.<br/>
+For end users, that means <strong>less repetitive typing and clicking</strong>, faster task completion, and fewer brittle "agent clicks the wrong thing" failures.
+</div>
+
+</v-click>
+
+---
+
+# How WebMCP works for the user
+
+<div class="grid grid-cols-3 gap-4 pt-4 text-sm">
+
+<div class="rounded-xl border border-white/10 bg-blue-500/10 p-4">
+  <div class="text-[0.7rem] font-semibold uppercase tracking-[0.18em] opacity-60">1. User asks</div>
+  <div class="mt-2 font-semibold">Natural language intent</div>
+  <div class="mt-2 opacity-85">
+    In Chrome or another browser agent, the user says:<br/>
+    <em>"Use my saved address and complete checkout with next-day delivery."</em>
+  </div>
+</div>
+
+<div class="rounded-xl border border-white/10 bg-purple-500/10 p-4">
+  <div class="text-[0.7rem] font-semibold uppercase tracking-[0.18em] opacity-60">2. Agent discovers tools</div>
+  <div class="mt-2 font-semibold">Schema over screen scraping</div>
+  <div class="mt-2 opacity-85">
+    The browser agent sees the app's registered tools and input schema, so it can call <code>completeCheckout</code> instead of guessing which button or field to click.
+  </div>
+</div>
+
+<div class="rounded-xl border border-white/10 bg-emerald-500/10 p-4">
+  <div class="text-[0.7rem] font-semibold uppercase tracking-[0.18em] opacity-60">3. App executes</div>
+  <div class="mt-2 font-semibold">Business action runs safely</div>
+  <div class="mt-2 opacity-85">
+    Angular executes your validated action or Signal Form submission, then returns success or validation errors the agent can react to.
+  </div>
+</div>
+
+</div>
+
+<v-click>
+
+<div class="pt-5 text-sm">
+What it brings to the user: <strong>speed</strong>, <strong>less form fatigue</strong>, and a much better experience on repetitive multi-step tasks like registration, booking, onboarding, and checkout.
+</div>
+
+</v-click>
+
+<v-click>
+
+<div class="pt-3 text-xs opacity-70">
+How they use it in practice: open the app in a browser that exposes a WebMCP-capable assistant, ask for the outcome in natural language, and let the assistant call the app's tools directly.
+</div>
+
+</v-click>
+
 ---
 
 # WebMCP in Angular 22
 
 ```typescript
-// app.config.ts — global tools, Experimental in v22
+// checkout.routes.ts — route-scoped tool for a checkout wizard, Experimental in v22
 import {
-  ApplicationConfig,
   inject,
   provideExperimentalWebMcpTools,
 } from '@angular/core';
+import { Routes } from '@angular/router';
 
-export const appConfig: ApplicationConfig = {
+export const routes: Routes = [{
+  path: 'checkout',
+  loadComponent: () => import('./checkout.page').then(m => m.CheckoutPage),
   providers: [
     provideExperimentalWebMcpTools([
       {
-        name: 'addTodo',
-        description: 'Add a new item to the user\'s to-do list',
+        name: 'applyShippingPreferences',
+        description: 'Fill the shipping step of checkout for the current user.',
         inputSchema: {
           type: 'object',
           properties: {
-            title: { type: 'string', description: 'Short task title' },
-            dueDate: { type: 'string', format: 'date-time' }
+            addressId: { type: 'string', description: 'Saved address identifier' },
+            shippingSpeed: { type: 'string', enum: ['standard', 'next-day'] },
           },
-          required: ['title'],
-          additionalProperties: false
+          required: ['addressId', 'shippingSpeed'],
+          additionalProperties: false,
         } as const,
-        execute: async ({ title, dueDate }) => {
-          const todoService = inject(TodoService);
-          await todoService.add({ title, dueDate });
-          return `Added "${title}" to the to-do list.`;
-        }
-      }
-    ])
-  ]
-};
+        execute: async ({ addressId, shippingSpeed }) => {
+          const checkout = inject(CheckoutWizardService);
+          await checkout.applyShipping(addressId, shippingSpeed);
+          return `Shipping step updated to ${shippingSpeed}.`;
+        },
+      },
+    ]),
+  ],
+}];
 ```
 
 <div class="text-xs opacity-70 pt-2">
-Tools run inside Angular's injection context — <code>inject()</code>, signals, the whole DI tree are available. The callback returns content for the agent (typically a string), not an RPC-style success object.
+This is where WebMCP becomes useful: the agent calls a <strong>business action</strong>, not a pile of button clicks.<br/>
+Angular keeps the tool inside your DI and route lifecycle, so the browser agent is using app semantics instead of DOM guesswork.
 </div>
 
 ---
@@ -1365,6 +1624,10 @@ const checkoutForm = form(this.cartData, schema, {
 // and registers the form as a WebMCP tool.
 ```
 
+<div class="text-xs opacity-70 pt-2">
+This is the strongest Angular-specific story: <strong>the wizard you already built</strong> becomes agent-callable without duplicating JSON schema, validation rules, and submission logic in a second system.
+</div>
+
 <v-click>
 
 <div class="pt-4 p-3 border-l-4 border-amber-500 bg-amber-50/10 text-sm">
@@ -1378,7 +1641,7 @@ const checkoutForm = form(this.cartData, schema, {
 <v-click>
 
 <div class="pt-4 text-xs opacity-70">
-Status: <strong>experimental</strong> in v22. WebMCP spec itself is in flux. Treat as preview, not production.
+Status: <strong>experimental</strong> in v22. WebMCP spec itself is in flux, currently needs a visible browser context, and today typically means Chrome flags / origin-trial-era ergonomics. Treat as preview, not production.
 </div>
 
 </v-click>
@@ -1401,6 +1664,7 @@ Status: <strong>experimental</strong> in v22. WebMCP spec itself is in flux. Tre
 <v-click>
 
 <div class="pt-4 text-sm">
+<strong>Important distinction:</strong> <code>Agentic UI</code> is the broader UX pattern; <code>WebMCP</code> is one technical mechanism that can power it.<br/>
 **WebMCP = your app is a tool. AG-UI = talk to your agent. A2UI = agent generates UI.**<br/>
 Different layers, often combined. Framework-agnostic standards, not Angular core.
 </div>
@@ -1409,9 +1673,36 @@ Different layers, often combined. Framework-agnostic standards, not Angular core
 
 <v-click>
 
+<div class="pt-4 grid grid-cols-2 gap-4 text-xs">
+  <div class="rounded-xl border border-cyan-400/20 bg-cyan-500/10 p-4">
+    <div class="font-semibold text-cyan-200">WebMCP use-case wording</div>
+    <div class="pt-2 opacity-85">
+      “Take the data from this PDF and fill the onboarding wizard for me.”<br/>
+      “Use my saved address and complete the shipping step.”<br/>
+      “Answer questions about this dossier by calling the page's structured search tool.”
+    </div>
+  </div>
+  <div class="rounded-xl border border-fuchsia-400/20 bg-fuchsia-500/10 p-4">
+    <div class="font-semibold text-fuchsia-200">Agentic UI wording</div>
+    <div class="pt-2 opacity-85">
+      “Help me finish this process.”<br/>
+      “Explain what is missing before I can submit.”<br/>
+      “Compare these options, ask me follow-up questions, then do the next step with me.”
+    </div>
+  </div>
+</div>
+
+<div class="pt-3 text-xs opacity-70">
+Rule of thumb: <strong>WebMCP shines when the app can expose a precise action or form step</strong>. <strong>Agentic UI shines when the user needs guidance, conversation, reasoning, and orchestration across steps.</strong>
+</div>
+
+</v-click>
+
+<v-click>
+
 <div class="pt-4 text-xs opacity-70">
-Deep dives: Manfred Steyer's "Agentic Angular" 6-part series at <em>angulararchitects.io/en/blog</em><br/>
-Reference repo: <em>github.com/angular-architects/flights42</em>
+Deep dives: Manfred Steyer's "Agentic Angular" 6-part series at <a href="https://www.angulararchitects.io/en/blog/"><em>angulararchitects.io/en/blog</em></a><br/>
+Reference repo: <a href="https://github.com/angular-architects/flights42"><em>github.com/angular-architects/flights42</em></a>
 </div>
 
 </v-click>
@@ -1420,9 +1711,9 @@ Reference repo: <em>github.com/angular-architects/flights42</em>
 layout: section
 ---
 
-# Part 7 — What else is in v21 & v22
+# Part 7 — Router, resources & upgrade reality
 
-The honorable mentions
+The defaults and migration details that hit real apps
 
 ---
 
@@ -1434,7 +1725,7 @@ The honorable mentions
 
 ### HTTP
 
-- `provideHttpClient()` is still required
+- You still provide `HttpClient`
 - `withFetch()` is the v21 opt-in for `FetchBackend`
 - New `responseType`, `referrerPolicy` options
 
@@ -1471,8 +1762,8 @@ The honorable mentions
 
 ### HTTP
 
+- You still provide `HttpClient`
 - `FetchBackend` is the **default** — `withFetch()` is no longer needed
-- `provideHttpClient()` still configures the client
 - `reportUploadProgress` / `reportDownloadProgress`
 - Old `reportProgress` boolean **deprecated**
 
@@ -1480,6 +1771,7 @@ The honorable mentions
 
 - `min`/`max` no longer accept strings (number-only)
 - Stable APIs + the compat bridge make incremental migration realistic
+- `getError()` / `reloadValidation()` / blur-debounce round out the stable story
 
 </div>
 
@@ -1489,7 +1781,7 @@ The honorable mentions
 
 - `resource()` / `rxResource()` / `httpResource()` are **stable**
 - `httpResource()` is eager and read-oriented; keep plain `HttpClient` for mutations
-- `ResourceSnapshot<T>` + `resourceFromSnapshots()` keep old data visible while new data loads
+- `chain()` + SSR cache IDs make resource composition much more practical
 
 ### Selectorless components
 
@@ -1498,12 +1790,279 @@ The honorable mentions
 
 ### Compiler
 
-- Node.js 26 supported
-- TypeScript 5.9 baseline
+- `strictTemplates` is now default
+- TypeScript **6.0+**; Node 20 dropped, Node 26 supported
 
 </div>
 
 </div>
+
+---
+
+# Single read: before vs after
+
+<div class="text-sm pt-2 opacity-80">
+Use case: a details page where one signal (like <code>userId</code>) drives one backend read.
+</div>
+
+<div class="text-xs pt-2 opacity-60">
+Step 1 in the progression: <code>HttpClient + RxJS</code> → <code>httpResource()</code>
+</div>
+
+````md magic-move {lines: true}
+```typescript
+// Before — manual loading state + subscription cleanup
+export class UserPage {
+  private readonly http = inject(HttpClient);
+  protected readonly userId = signal(42);
+  protected readonly user = signal<User | null>(null);
+  protected readonly loading = signal(false);
+
+  constructor() {
+    effect((onCleanup) => {
+      this.loading.set(true);
+
+      const sub = this.http
+        .get<User>(`/api/users/${this.userId()}`)
+        .subscribe(user => {
+          this.user.set(user);
+          this.loading.set(false);
+        });
+
+      onCleanup(() => sub.unsubscribe());
+    });
+  }
+}
+```
+
+```typescript
+// v22 — declarative read path with httpResource()
+export class UserPage {
+  protected readonly userId = signal(42);
+
+  protected readonly user = httpResource<User>(() =>
+    `/api/users/${this.userId()}`
+  );
+}
+// user.value(), user.isLoading(), user.error(), user.status()
+```
+````
+
+<div class="text-xs opacity-70 pt-2">
+Use <code>httpResource()</code> for reads that should track signals and own loading/error state. Keep plain <code>HttpClient</code> for mutations and imperative workflows.
+</div>
+
+<!--
+First land the simple case: one signal drives one read. Once the audience buys this, the next slide can escalate to dependent reads and explain why chain() exists.
+-->
+
+---
+
+# Dependent reads: before vs after
+
+<div class="text-sm pt-2 opacity-80">
+Use case: a page where the second read depends on data from the first one — for example, load a user, then load posts by that user's id.
+</div>
+
+<div class="text-xs pt-2 opacity-60">
+Step 2 → 3 in the progression: <code>HttpClient + RxJS</code> → <code>resource()</code> → <code>chain()</code>
+</div>
+
+````md magic-move {lines: true}
+```typescript
+// Step 1 — classic HttpClient + RxJS chain
+export class UserPostsPage {
+  private readonly http = inject(HttpClient);
+  protected readonly userId = signal(42);
+
+  protected readonly vm = toSignal(
+    toObservable(this.userId).pipe(
+      switchMap(id =>
+        this.http.get<User>(`/api/users/${id}`).pipe(
+          switchMap(user =>
+            this.http.get<Post[]>('/api/posts', {
+              params: { authorId: user.id }
+            }).pipe(
+              map(posts => ({ user, posts }))
+            )
+          )
+        )
+      )
+    ),
+    { initialValue: undefined }
+  );
+}
+```
+
+```typescript
+// Step 2 — resources help, but dependency handling is still manual
+export class UserPostsPage {
+  protected readonly userId = signal(42);
+
+  protected readonly user = resource({
+    params: () => ({ id: this.userId() }),
+    loader: ({ params }) => this.userApi.get(params.id),
+  });
+
+  protected readonly posts = resource({
+    params: () => {
+      if (!this.user.hasValue()) return undefined;
+      return { authorId: this.user.value().id };
+    },
+    loader: ({ params }) => this.postsApi.listByAuthor(params.authorId),
+  });
+}
+// Works, but loading/error propagation is manual and easy to get wrong.
+```
+
+```typescript
+// Step 3 — v22 chain() composes dependent resources explicitly
+export class UserPostsPage {
+  protected readonly userId = signal(42);
+
+  protected readonly user = resource({
+    params: () => ({ id: this.userId() }),
+    loader: ({ params }) => this.userApi.get(params.id),
+  });
+
+  protected readonly posts = resource({
+    params: ({ chain }) => {
+      const user = chain(this.user);
+      return { authorId: user.id };
+    },
+    loader: ({ params }) => this.postsApi.listByAuthor(params.authorId),
+  });
+}
+// If user is idle/loading/error, posts mirrors that dependency state automatically.
+```
+````
+
+<div class="text-xs opacity-70 pt-2">
+This is the right use case for <code>chain()</code>: the second read depends on a resolved field from the first read. The progression is the point: <code>RxJS chain</code> → <code>manual resource composition</code> → <code>dependency-aware resource composition</code>.
+</div>
+
+<!--
+Tell this as a three-beat story. First: "yes, we all wrote the RxJS version". Second: "resources already help". Third: "chain() is the missing piece for dependent reads".
+Mention the upstream behavior explicitly: idle→idle, loading→loading, error→dependency error, resolved→normal load.
+-->
+
+---
+
+# Router inputs: before vs after
+
+<div class="text-sm pt-2 opacity-80">
+Use case: a routed page that wants path params and query params as normal component inputs instead of manual <code>ActivatedRoute</code> plumbing.
+</div>
+
+<div class="text-xs pt-2 opacity-60">
+Useful enough to show — many Angular devs know path params, fewer remember that <code>withComponentInputBinding()</code> can bind query params, route data, and resolvers too.
+</div>
+
+````md magic-move {lines: true}
+```typescript
+// Before — read route state manually
+export class UserPage {
+  private readonly route = inject(ActivatedRoute);
+
+  protected readonly id = toSignal(
+    this.route.paramMap.pipe(map(params => params.get('id') ?? '')),
+    { initialValue: '' }
+  );
+
+  protected readonly tab = toSignal(
+    this.route.queryParamMap.pipe(map(params => params.get('tab') ?? 'overview')),
+    { initialValue: 'overview' }
+  );
+}
+```
+
+```typescript
+// After — let the router bind directly to inputs
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(routes, withComponentInputBinding())]
+};
+
+export class UserPage {
+  readonly id = input.required<string>();
+  readonly tab = input('overview');
+}
+// Path params, query params, route data, and resolvers can all bind.
+```
+
+```typescript
+// v22 — tune the binding behavior if needed
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes, withComponentInputBinding({
+      queryParams: false,
+      unmatchedInputBehavior: 'undefinedIfStale'
+    }))
+  ]
+};
+```
+````
+
+<div class="text-xs opacity-70 pt-2">
+This is not just syntactic sugar: it moves route state into the same <code>input()</code>-first mental model as the rest of modern Angular. v22 makes it more practical by adding options like <code>queryParams</code> and <code>unmatchedInputBehavior</code>.
+</div>
+
+<!--
+Worth showing. Plenty of Angular devs know route params can become inputs, but the broader binding sources and new v22 options are not yet universal knowledge.
+-->
+
+---
+
+# Nested route params: before vs after
+
+<div class="text-sm pt-2 opacity-80">
+Use case: deeply nested routes where parent params should be reachable without <code>route.parent?.parent?</code> archaeology.
+</div>
+
+<div class="text-xs pt-2 opacity-60">
+Another router progression: <code>manual parent traversal</code> → <code>inherited params by default</code> → <code>explicit opt-out</code>
+</div>
+
+````md magic-move {lines: true}
+```typescript
+// Before — default was 'emptyOnly'
+export class IssueDetailsPage {
+  private readonly route = inject(ActivatedRoute);
+
+  protected readonly teamId =
+    this.route.parent?.parent?.snapshot.paramMap.get('teamId');
+}
+```
+
+```typescript
+// v22 — default is paramsInheritanceStrategy: 'always'
+export class IssueDetailsPage {
+  private readonly route = inject(ActivatedRoute);
+
+  protected readonly teamId =
+    this.route.snapshot.paramMap.get('teamId');
+}
+```
+
+```typescript
+// If you relied on the old behavior, restore it explicitly
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(
+      routes,
+      withRouterConfig({ paramsInheritanceStrategy: 'emptyOnly' })
+    )
+  ]
+};
+```
+````
+
+<div class="text-xs opacity-70 pt-2">
+This is a real quality-of-life breaking change: less <code>route.parent?.parent?</code> plumbing for nested routes. If you depended on the old behavior, opt out in app config with <code>withRouterConfig({ paramsInheritanceStrategy: 'emptyOnly' })</code>.
+</div>
+
+<!--
+This lands the router default change with an example people have actually written, plus the actual config escape hatch. Emphasize that it's great, but still worth auditing.
+-->
 
 ---
 
@@ -1518,12 +2077,12 @@ The honorable mentions
 
 <div v-click class="rounded-xl border border-white/10 bg-purple-500/10 p-3">
   <div class="font-semibold">Signal Forms polish</div>
-  <div class="mt-1">Field <code>debounce()</code>, async validators, and HTTP validators replace common <code>valueChanges + switchMap</code> plumbing.</div>
+  <div class="mt-1"><code>getError()</code>, <code>reloadValidation()</code>, and <code>debounce(..., 'blur')</code> replace a lot of custom glue.</div>
 </div>
 
 <div v-click class="rounded-xl border border-white/10 bg-emerald-500/10 p-3">
   <div class="font-semibold">Resources compose</div>
-  <div class="mt-1"><code>ResourceSnapshot</code> + <code>resourceFromSnapshots()</code> means “keep previous value while reloading” without manual cache state.</div>
+  <div class="mt-1"><code>chain()</code> and SSR cache IDs make dependent resources much less awkward.</div>
 </div>
 
 <div v-click class="rounded-xl border border-white/10 bg-orange-500/10 p-3">
@@ -1571,12 +2130,51 @@ This is the practical "small stuff" slide: a grab bag of features that are too s
 
 - **OnPush as default** — auto-migration adds `Eager` to unmigrated components. Watch third-party libs.
 - **`web-test-runner` + `jest` experimental builders REMOVED**
+- **Router params now inherit by default** — `paramsInheritanceStrategy: 'always'`
 - **`HttpClient.reportProgress` deprecated** → split into upload/download
 - **Signal Forms `min`/`max`** no longer accept strings
-- **Node.js 26 supported**; verify your team baseline from the current v22 release notes
+- **TypeScript 6.0+**; Node 20 dropped, Node 26 supported
+- **Webpack-era builders deprecated** as Angular leans into the application builder path
 - **Selectorless** still in flux — APIs may continue to evolve across minors
 
 </v-clicks>
+
+---
+
+# TypeScript 6: the tsconfig bits that bite
+
+<div class="grid grid-cols-2 gap-6 pt-4 text-sm">
+
+<div>
+
+### Defaults that changed
+
+- <code>types</code> now defaults to <code>[]</code>
+  <br/>→ add <code>["node"]</code>, test-runner globals, etc. when names suddenly vanish
+- <code>rootDir</code> now defaults to <code>.</code>
+  <br/>→ set <code>"rootDir": "./src"</code> if output starts landing in <code>dist/src/...</code>
+- <code>strict</code> now defaults to <code>true</code>
+  <br/>→ usually already true in Angular CLI apps, less boring in custom workspaces
+
+</div>
+
+<div>
+
+### Deprecations to clean up
+
+- <code>baseUrl</code> deprecated → move prefixes directly into <code>paths</code>
+- <code>moduleResolution: "node"</code> deprecated
+  <br/>→ prefer <code>bundler</code> for web apps, <code>nodenext</code> for Node
+- <code>ignoreDeprecations: "6.0"</code> is a bridge, not a strategy
+- <code>ts5to6</code> codemod can rewrite <code>baseUrl</code> / <code>rootDir</code>
+
+</div>
+
+</div>
+
+<div class="text-xs opacity-70 pt-4">
+Angular 22 only says “TypeScript 6.0+ required”, but the real upgrade pain usually shows up in custom <code>tsconfig</code> files, not in component code.
+</div>
 
 ---
 layout: center
@@ -1638,11 +2236,13 @@ Call out the official migrations reference here: Angular ships named schematics 
 ### Must-watch
 - **Alex Rickabaugh — Signal Forms deep dive** (YouTube `hKkiivsyrHA`, Jan 2026)
 - **OnPush-by-default RFC #66779** — Jan 2026
-- **Steyer — "Agentic Angular" 6-part series** at angulararchitects.io
+- **Steyer — "Agentic Angular" 6-part series** at [angulararchitects.io](https://www.angulararchitects.io/en/blog/)
 
 ### Release recaps
-- **Ninja Squad** — v21.0 / 21.1 / 21.2 deep dives at `blog.ninja-squad.com`
-- **Brian Treese** — `briantree.se` for practical patterns
+- **Angular team** — [blog.angular.dev/announcing-angular-v22-c52bb83a4664](https://blog.angular.dev/announcing-angular-v22-c52bb83a4664)
+- **Ninja Squad** — [blog.ninja-squad.com/2026/06/03/what-is-new-angular-22.0](https://blog.ninja-squad.com/2026/06/03/what-is-new-angular-22.0)
+- **Angular.love** — [angular.love/angular-22-key-features-and-changes](https://angular.love/angular-22-key-features-and-changes)
+- **Brian Treese** — [briantree.se](https://briantree.se/) for practical patterns
 - **Marmicode Cookbook** — practical Angular testing migration recipes
 
 </div>
@@ -1650,13 +2250,15 @@ Call out the official migrations reference here: Angular ships named schematics 
 <div>
 
 ### Official docs
-- `angular.dev/tutorials/signals` — canonical learning order
-- `angular.dev/guide/zoneless`
-- `angular.dev/guide/animations`
-- `angular.dev/guide/aria/overview`
-- `angular.dev/reference/migrations`
-- `angular.dev/ai/develop-with-ai` + `/ai/mcp`
-- `next.angular.dev/api/core/provideExperimentalWebMcpTools`
+- [angular.dev/tutorials/signals](https://angular.dev/tutorials/signals) — canonical learning order
+- [angular.dev/guide/zoneless](https://angular.dev/guide/zoneless)
+- [angular.dev/guide/animations](https://angular.dev/guide/animations)
+- [angular.dev/guide/aria/overview](https://angular.dev/guide/aria/overview)
+- [angular.dev/reference/migrations](https://angular.dev/reference/migrations)
+- [angular.dev/ai/develop-with-ai](https://angular.dev/ai/develop-with-ai) + [`/ai/mcp`](https://angular.dev/ai/mcp)
+- [next.angular.dev/api/core/provideExperimentalWebMcpTools](https://next.angular.dev/api/core/provideExperimentalWebMcpTools)
+- [typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html)
+- [devblogs.microsoft.com/typescript/announcing-typescript-6-0](https://devblogs.microsoft.com/typescript/announcing-typescript-6-0)
 
 ### Migration tools
 - `ng update @angular/core @angular/cli`
