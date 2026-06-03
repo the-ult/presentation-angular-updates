@@ -77,13 +77,15 @@ Latest stable: **21.2.14**
 ### Angular 22 — Released (June 2026)
 
 The **graduation** release:
-- Signal Forms → **stable**
-- **OnPush** as default change detection
+- Signal Forms → **stable** public API
+- **OnPush** is the default change detection strategy
+- FetchBackend + incremental hydration are now **default**
 - `resource()`, `rxResource()`, `httpResource()` → **stable**
 - `injectAsync()` **stable**
 - `@Service()` **public API**
-- WebMCP for agentic UI
-- FetchBackend default for `HttpClient`
+- Router defaults shift; new `browserUrl` link control
+- WebMCP + AI tooling become a first-class story
+- Breaking cleanup + TS 6 / Node 26 baseline changes
 
 Current major: **22.x**
 
