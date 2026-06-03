@@ -637,9 +637,9 @@ Step 1 in the progression: <code>Reactive Forms</code> → <code>Signal Forms</c
 ````md magic-move {lines: true}
 ```typescript
 // ❌ Reactive Forms — explicit form model + subscriptions
-export class LoginComponent implements OnInit, OnDestroy {
+export class LoginComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   loginForm!: FormGroup;
-  private destroy$ = new Subject<void>();
 
   constructor(private fb: FormBuilder) {}
 
@@ -650,13 +650,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     });
 
     this.loginForm.valueChanges
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(value => this.onChange(value));
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 }
 ```
@@ -684,6 +679,59 @@ The real win is not just fewer lines — the signal model becomes the single sou
 <!--
 This is the side-by-side that lands hardest. Everyone has written the top version dozens of times.
 -->
+
+---
+
+# Signal Forms `parse()` vs Zod `parse()`
+
+<div class="text-sm pt-2 opacity-85">
+These are related but different concepts:
+</div>
+
+<div class="grid grid-cols-2 gap-6 pt-4 text-sm">
+
+<div>
+
+### `transformedValue({ parse, format })`
+
+- Used in custom controls
+- `parse` converts raw UI input → typed model value
+- Can return parse errors for invalid raw input
+
+</div>
+
+<div>
+
+### `validateStandardSchema(..., zodSchema)`
+
+- Used for form schema validation
+- Runs Standard Schema validation (e.g. Zod)
+- Prefer this over manually calling `zodSchema.parse(...)` in component code
+
+</div>
+
+</div>
+
+```typescript
+import { signal } from '@angular/core';
+import { form, validateStandardSchema } from '@angular/forms/signals';
+import * as z from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+const loginModel = signal({ email: '', password: '' });
+
+const loginForm = form(loginModel, (schema) => {
+  validateStandardSchema(schema, loginSchema);
+});
+```
+
+<div class="text-xs opacity-70 pt-2">
+Rule of thumb: <code>transformedValue.parse</code> is for input conversion (raw ↔ typed), while Zod/Standard Schema is for declarative validation rules.
+</div>
 
 ---
 
