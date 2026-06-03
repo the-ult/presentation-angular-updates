@@ -1479,8 +1479,8 @@ Your IDE asks the Angular CLI for examples, docs, migrations.
 
 AI agent ↔ **your live app in the browser**
 
-User: *"add 'feed the cats' to my to-do list."*<br/>
-Watches it happen without typing.
+User: *"complete checkout with my saved shipping address and next-day delivery."*<br/>
+The agent fills the wizard through your app's real business flow.
 
 → Makes your **running app** agent-callable.
 
@@ -1496,46 +1496,107 @@ Same MCP family, opposite direction. Built on the emerging W3C <code>navigator.m
 
 </v-click>
 
+<v-click>
+
+<div class="pt-4 text-sm opacity-85">
+Best fit: <strong>structured user intent</strong> — checkout, registration, search, exports, booking flows.<br/>
+For end users, that means <strong>less repetitive typing and clicking</strong>, faster task completion, and fewer brittle "agent clicks the wrong thing" failures.
+</div>
+
+</v-click>
+
+---
+
+# How WebMCP works for the user
+
+<div class="grid grid-cols-3 gap-4 pt-4 text-sm">
+
+<div class="rounded-xl border border-white/10 bg-blue-500/10 p-4">
+  <div class="text-[0.7rem] font-semibold uppercase tracking-[0.18em] opacity-60">1. User asks</div>
+  <div class="mt-2 font-semibold">Natural language intent</div>
+  <div class="mt-2 opacity-85">
+    In Chrome or another browser agent, the user says:<br/>
+    <em>"Use my saved address and complete checkout with next-day delivery."</em>
+  </div>
+</div>
+
+<div class="rounded-xl border border-white/10 bg-purple-500/10 p-4">
+  <div class="text-[0.7rem] font-semibold uppercase tracking-[0.18em] opacity-60">2. Agent discovers tools</div>
+  <div class="mt-2 font-semibold">Schema over screen scraping</div>
+  <div class="mt-2 opacity-85">
+    The browser agent sees the app's registered tools and input schema, so it can call <code>completeCheckout</code> instead of guessing which button or field to click.
+  </div>
+</div>
+
+<div class="rounded-xl border border-white/10 bg-emerald-500/10 p-4">
+  <div class="text-[0.7rem] font-semibold uppercase tracking-[0.18em] opacity-60">3. App executes</div>
+  <div class="mt-2 font-semibold">Business action runs safely</div>
+  <div class="mt-2 opacity-85">
+    Angular executes your validated action or Signal Form submission, then returns success or validation errors the agent can react to.
+  </div>
+</div>
+
+</div>
+
+<v-click>
+
+<div class="pt-5 text-sm">
+What it brings to the user: <strong>speed</strong>, <strong>less form fatigue</strong>, and a much better experience on repetitive multi-step tasks like registration, booking, onboarding, and checkout.
+</div>
+
+</v-click>
+
+<v-click>
+
+<div class="pt-3 text-xs opacity-70">
+How they use it in practice: open the app in a browser that exposes a WebMCP-capable assistant, ask for the outcome in natural language, and let the assistant call the app's tools directly.
+</div>
+
+</v-click>
+
 ---
 
 # WebMCP in Angular 22
 
 ```typescript
-// app.config.ts — global tools, Experimental in v22
+// checkout.routes.ts — route-scoped tool for a checkout wizard, Experimental in v22
 import {
-  ApplicationConfig,
   inject,
   provideExperimentalWebMcpTools,
 } from '@angular/core';
+import { Routes } from '@angular/router';
 
-export const appConfig: ApplicationConfig = {
+export const routes: Routes = [{
+  path: 'checkout',
+  loadComponent: () => import('./checkout.page').then(m => m.CheckoutPage),
   providers: [
     provideExperimentalWebMcpTools([
       {
-        name: 'addTodo',
-        description: 'Add a new item to the user\'s to-do list',
+        name: 'applyShippingPreferences',
+        description: 'Fill the shipping step of checkout for the current user.',
         inputSchema: {
           type: 'object',
           properties: {
-            title: { type: 'string', description: 'Short task title' },
-            dueDate: { type: 'string', format: 'date-time' }
+            addressId: { type: 'string', description: 'Saved address identifier' },
+            shippingSpeed: { type: 'string', enum: ['standard', 'next-day'] },
           },
-          required: ['title'],
-          additionalProperties: false
+          required: ['addressId', 'shippingSpeed'],
+          additionalProperties: false,
         } as const,
-        execute: async ({ title, dueDate }) => {
-          const todoService = inject(TodoService);
-          await todoService.add({ title, dueDate });
-          return `Added "${title}" to the to-do list.`;
-        }
-      }
-    ])
-  ]
-};
+        execute: async ({ addressId, shippingSpeed }) => {
+          const checkout = inject(CheckoutWizardService);
+          await checkout.applyShipping(addressId, shippingSpeed);
+          return `Shipping step updated to ${shippingSpeed}.`;
+        },
+      },
+    ]),
+  ],
+}];
 ```
 
 <div class="text-xs opacity-70 pt-2">
-Tools run inside Angular's injection context — <code>inject()</code>, signals, the whole DI tree are available. The callback returns content for the agent (typically a string), not an RPC-style success object.
+This is where WebMCP becomes useful: the agent calls a <strong>business action</strong>, not a pile of button clicks.<br/>
+Angular keeps the tool inside your DI and route lifecycle, so the browser agent is using app semantics instead of DOM guesswork.
 </div>
 
 ---
@@ -1562,6 +1623,10 @@ const checkoutForm = form(this.cartData, schema, {
 // Angular derives JSON schema from the form model
 // and registers the form as a WebMCP tool.
 ```
+
+<div class="text-xs opacity-70 pt-2">
+This is the strongest Angular-specific story: <strong>the wizard you already built</strong> becomes agent-callable without duplicating JSON schema, validation rules, and submission logic in a second system.
+</div>
 
 <v-click>
 
@@ -1599,8 +1664,36 @@ Status: <strong>experimental</strong> in v22. WebMCP spec itself is in flux, cur
 <v-click>
 
 <div class="pt-4 text-sm">
+<strong>Important distinction:</strong> <code>Agentic UI</code> is the broader UX pattern; <code>WebMCP</code> is one technical mechanism that can power it.<br/>
 **WebMCP = your app is a tool. AG-UI = talk to your agent. A2UI = agent generates UI.**<br/>
 Different layers, often combined. Framework-agnostic standards, not Angular core.
+</div>
+
+</v-click>
+
+<v-click>
+
+<div class="pt-4 grid grid-cols-2 gap-4 text-xs">
+  <div class="rounded-xl border border-cyan-400/20 bg-cyan-500/10 p-4">
+    <div class="font-semibold text-cyan-200">WebMCP use-case wording</div>
+    <div class="pt-2 opacity-85">
+      “Take the data from this PDF and fill the onboarding wizard for me.”<br/>
+      “Use my saved address and complete the shipping step.”<br/>
+      “Answer questions about this dossier by calling the page's structured search tool.”
+    </div>
+  </div>
+  <div class="rounded-xl border border-fuchsia-400/20 bg-fuchsia-500/10 p-4">
+    <div class="font-semibold text-fuchsia-200">Agentic UI wording</div>
+    <div class="pt-2 opacity-85">
+      “Help me finish this process.”<br/>
+      “Explain what is missing before I can submit.”<br/>
+      “Compare these options, ask me follow-up questions, then do the next step with me.”
+    </div>
+  </div>
+</div>
+
+<div class="pt-3 text-xs opacity-70">
+Rule of thumb: <strong>WebMCP shines when the app can expose a precise action or form step</strong>. <strong>Agentic UI shines when the user needs guidance, conversation, reasoning, and orchestration across steps.</strong>
 </div>
 
 </v-click>
@@ -1632,7 +1725,7 @@ The defaults and migration details that hit real apps
 
 ### HTTP
 
-- `provideHttpClient()` is still required
+- You still provide `HttpClient`
 - `withFetch()` is the v21 opt-in for `FetchBackend`
 - New `responseType`, `referrerPolicy` options
 
@@ -1669,8 +1762,8 @@ The defaults and migration details that hit real apps
 
 ### HTTP
 
+- You still provide `HttpClient`
 - `FetchBackend` is the **default** — `withFetch()` is no longer needed
-- `provideHttpClient()` still configures the client
 - `reportUploadProgress` / `reportDownloadProgress`
 - Old `reportProgress` boolean **deprecated**
 
