@@ -464,7 +464,7 @@ onProductSelected(code: string) { this.selectedProduct.set(code); }
 ````
 
 <div v-click class="text-sm opacity-70 pt-2">
-Example adapted from Vasco Cavalheiro, <em>angular-university.io/angular-linkedsignal</em>
+Example adapted from Vasco Cavalheiro, <a href="https://angular-university.io/angular-linkedsignal"><em>angular-university.io/angular-linkedsignal</em></a>
 </div>
 
 <!--
@@ -771,6 +771,7 @@ Step 3 in the progression: <code>manual RxJS validation glue</code> → <code>va
 ```typescript
 // Before — Reactive Forms + manual RxJS debounce pipeline
 export class SignupComponent {
+  private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
 
@@ -784,6 +785,7 @@ export class SignupComponent {
     this.form.controls.email.valueChanges.pipe(
       debounceTime(400),
       distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef),
       switchMap(email => this.http.get<{ taken: boolean }>(
         `/api/users/check?email=${email}`
       ))
@@ -802,7 +804,7 @@ export class SignupComponent {
     email(form.email);
 
     validateHttp(form.email, {
-      request: email => `/api/users/check?email=${email.value()}`,
+      request: email => `/api/users/check?email=${encodeURIComponent(email.value())}`,
       debounce: 400,
       errors: result => result.taken ? { emailTaken: true } : null,
     });
@@ -885,7 +887,7 @@ protected onAgeKeydown(event: KeyboardEvent) {
 
 <div class="text-xs opacity-70 pt-2">
 v22 keeps the UI as text, the model as <code>number | null</code>, and empty input as <code>null</code>.<br/>
-Commit <code>41b1410c</code>. Source: Brian Treese, <em>briantree.se/angular-signal-forms-number-inputs</em>
+Commit <code>41b1410c</code>. Source: Brian Treese, <a href="https://briantree.se/angular-signal-forms-number-inputs"><em>briantree.se/angular-signal-forms-number-inputs</em></a>
 </div>
 
 <!--
@@ -1394,7 +1396,7 @@ Where Angular is genuinely ahead
   <span class="text-2xl">📄</span>
   <div>
     <strong>Curated context for LLMs</strong><br/>
-    <code>angular.dev/llms.txt</code>, <code>llms-full.txt</code>, copy-paste system prompts at <code>angular.dev/ai/develop-with-ai</code>
+    <a href="https://angular.dev/llms.txt"><code>angular.dev/llms.txt</code></a>, <a href="https://angular.dev/llms-full.txt"><code>llms-full.txt</code></a>, copy-paste system prompts at <a href="https://angular.dev/ai/develop-with-ai"><code>angular.dev/ai/develop-with-ai</code></a>
   </div>
 </div>
 
@@ -1606,8 +1608,8 @@ Different layers, often combined. Framework-agnostic standards, not Angular core
 <v-click>
 
 <div class="pt-4 text-xs opacity-70">
-Deep dives: Manfred Steyer's "Agentic Angular" 6-part series at <em>angulararchitects.io/en/blog</em><br/>
-Reference repo: <em>github.com/angular-architects/flights42</em>
+Deep dives: Manfred Steyer's "Agentic Angular" 6-part series at <a href="https://www.angulararchitects.io/en/blog/"><em>angulararchitects.io/en/blog</em></a><br/>
+Reference repo: <a href="https://github.com/angular-architects/flights42"><em>github.com/angular-architects/flights42</em></a>
 </div>
 
 </v-click>
@@ -2141,13 +2143,13 @@ Call out the official migrations reference here: Angular ships named schematics 
 ### Must-watch
 - **Alex Rickabaugh — Signal Forms deep dive** (YouTube `hKkiivsyrHA`, Jan 2026)
 - **OnPush-by-default RFC #66779** — Jan 2026
-- **Steyer — "Agentic Angular" 6-part series** at angulararchitects.io
+- **Steyer — "Agentic Angular" 6-part series** at [angulararchitects.io](https://www.angulararchitects.io/en/blog/)
 
 ### Release recaps
-- **Angular team** — `blog.angular.dev/announcing-angular-v22-c52bb83a4664`
-- **Ninja Squad** — `blog.ninja-squad.com/2026/06/03/what-is-new-angular-22.0`
-- **Angular.love** — `angular.love/angular-22-key-features-and-changes`
-- **Brian Treese** — `briantree.se` for practical patterns
+- **Angular team** — [blog.angular.dev/announcing-angular-v22-c52bb83a4664](https://blog.angular.dev/announcing-angular-v22-c52bb83a4664)
+- **Ninja Squad** — [blog.ninja-squad.com/2026/06/03/what-is-new-angular-22.0](https://blog.ninja-squad.com/2026/06/03/what-is-new-angular-22.0)
+- **Angular.love** — [angular.love/angular-22-key-features-and-changes](https://angular.love/angular-22-key-features-and-changes)
+- **Brian Treese** — [briantree.se](https://briantree.se/) for practical patterns
 - **Marmicode Cookbook** — practical Angular testing migration recipes
 
 </div>
@@ -2155,15 +2157,15 @@ Call out the official migrations reference here: Angular ships named schematics 
 <div>
 
 ### Official docs
-- `angular.dev/tutorials/signals` — canonical learning order
-- `angular.dev/guide/zoneless`
-- `angular.dev/guide/animations`
-- `angular.dev/guide/aria/overview`
-- `angular.dev/reference/migrations`
-- `angular.dev/ai/develop-with-ai` + `/ai/mcp`
-- `next.angular.dev/api/core/provideExperimentalWebMcpTools`
-- `typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html`
-- `devblogs.microsoft.com/typescript/announcing-typescript-6-0`
+- [angular.dev/tutorials/signals](https://angular.dev/tutorials/signals) — canonical learning order
+- [angular.dev/guide/zoneless](https://angular.dev/guide/zoneless)
+- [angular.dev/guide/animations](https://angular.dev/guide/animations)
+- [angular.dev/guide/aria/overview](https://angular.dev/guide/aria/overview)
+- [angular.dev/reference/migrations](https://angular.dev/reference/migrations)
+- [angular.dev/ai/develop-with-ai](https://angular.dev/ai/develop-with-ai) + [`/ai/mcp`](https://angular.dev/ai/mcp)
+- [next.angular.dev/api/core/provideExperimentalWebMcpTools](https://next.angular.dev/api/core/provideExperimentalWebMcpTools)
+- [typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html)
+- [devblogs.microsoft.com/typescript/announcing-typescript-6-0](https://devblogs.microsoft.com/typescript/announcing-typescript-6-0)
 
 ### Migration tools
 - `ng update @angular/core @angular/cli`

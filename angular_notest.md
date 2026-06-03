@@ -167,7 +167,7 @@ selectedOption = linkedSignal({
 - Writable + auto-derives from a source + resets when source changes → **`linkedSignal()`**
 - Two-way parent↔child binding → **`model()`**
 
-**Why this matters for v21/v22:** Signal Forms uses linkedSignal-style patterns internally for field state — a field's `value()` is writable but tracks the underlying data signal. If `linkedSignal`'s mental model clicks, Signal Forms' design stops looking magic. The official v21 Signals tutorial (`angular.dev/tutorials/signals`) walks `signal` → `computed` → `linkedSignal` → `model` as the canonical learning order. See also Vasco Cavalheiro's deep-dive: `blog.angular-university.io/angular-linkedsignal`.
+**Why this matters for v21/v22:** Signal Forms uses linkedSignal-style patterns internally for field state — a field's `value()` is writable but tracks the underlying data signal. If `linkedSignal`'s mental model clicks, Signal Forms' design stops looking magic. The official v21 Signals tutorial ([`angular.dev/tutorials/signals`](https://angular.dev/tutorials/signals)) walks `signal` → `computed` → `linkedSignal` → `model` as the canonical learning order. See also Vasco Cavalheiro's deep-dive: [`blog.angular-university.io/angular-linkedsignal`](https://blog.angular-university.io/angular-linkedsignal).
 
 **Common pitfall:** reaching for `linkedSignal` when `computed` would do. It's a *specialized* primitive for a specific scenario, not a default. Most reactive state in your app should still be plain `signal()` + `computed()`.
 
@@ -423,9 +423,9 @@ Both run Vitest, but they're architecturally different: Angular's builder constr
 Angular's AI investment in 2025–2026 is conceptually three-layered: **(1) curated context for LLMs**, **(2) agentic tooling via MCP**, and **(3) measurable quality via the Web Codegen Scorer**.
 
 ### Curated context: `llms.txt` and best-practice prompts
-- `angular.dev/llms.txt` — index of links to key resources.
-- `angular.dev/llms-full.txt` — compiled, long-form description of how Angular works and best practices.
-- `angular.dev/ai/develop-with-ai` — copy-paste system prompt for any LLM ("You are an expert in TypeScript, Angular, and scalable web application development … Use signals for state management … Implement lazy loading for feature routes … Do NOT use the `@HostBinding` and `@HostListener` decorators.")
+- [`angular.dev/llms.txt`](https://angular.dev/llms.txt) — index of links to key resources.
+- [`angular.dev/llms-full.txt`](https://angular.dev/llms-full.txt) — compiled, long-form description of how Angular works and best practices.
+- [`angular.dev/ai/develop-with-ai`](https://angular.dev/ai/develop-with-ai) — copy-paste system prompt for any LLM ("You are an expert in TypeScript, Angular, and scalable web application development … Use signals for state management … Implement lazy loading for feature routes … Do NOT use the `@HostBinding` and `@HostListener` decorators.")
 
 ### The MCP server (`ng mcp`)
 Ships with the Angular CLI. Configured per-IDE via JSON in `.vscode/mcp.json`, `~/.cursor/mcp.json`, JetBrains AI Assistant settings, etc.
@@ -445,7 +445,7 @@ Enable all experimental tools with `ng mcp --experimental-tool=all`. New workspa
 
 ### Angular Agent Skills (v22 spotlight, v21-era roots)
 
-The Angular agent-skills story has roots in the v21-era AI push, but Angular 22 is where the Angular team more clearly **formalizes and spotlights** the skills layer via `github.com/angular/skills`.
+The Angular agent-skills story has roots in the v21-era AI push, but Angular 22 is where the Angular team more clearly **formalizes and spotlights** the skills layer via [`github.com/angular/skills`](https://github.com/angular/skills).
 
 - **`angular-developer`** — Angular best practices and guidance for modern APIs like Signal Forms and Angular Aria.
 - **`angular-new-app`** — guidance for creating a new Angular app in an agentic environment.
@@ -539,7 +539,7 @@ That's it — your form is now AI-callable. The agent gets a JSON schema derived
 **Important security caveat (from official docs):** Angular does NOT validate that the agent's inputs match your declared JSON schema. Validate explicitly in your `execute` function or in the form's schema before acting on the data.
 
 #### What this means for product design — "agentic UI"
-"Agentic UI" is the broader pattern WebMCP enables: applications designed so an AI agent can complete tasks the user describes in natural language, instead of clicking through wizards. Manfred Steyer (Angular GDE, AngularArchitects) has been the loudest voice on this in the Angular community — see his eBook at `agentic-angular.com` and the AngularArchitects workshop *"Agentic UI with Angular: Architecture & Patterns"* (`angulararchitects.io/en/training/agentic-ai-with-angular-architecture-patterns`).
+"Agentic UI" is the broader pattern WebMCP enables: applications designed so an AI agent can complete tasks the user describes in natural language, instead of clicking through wizards. Manfred Steyer (Angular GDE, AngularArchitects) has been the loudest voice on this in the Angular community — see his eBook at [`agentic-angular.com`](https://agentic-angular.com) and the AngularArchitects workshop *"Agentic UI with Angular: Architecture & Patterns"* ([`angulararchitects.io/en/training/agentic-ai-with-angular-architecture-patterns`](https://www.angulararchitects.io/en/training/agentic-ai-with-angular-architecture-patterns)).
 
 The broader standards landscape Steyer points to:
 - **MCP** — tool calling protocol (Anthropic, now widely adopted)
@@ -552,7 +552,7 @@ For Angular teams the v22 takeaway is narrower: **WebMCP turns your existing Sig
 #### Status & stability
 - `provideExperimentalWebMcpTools` — **Experimental in v22.** APIs subject to change even outside major versions.
 - The WebMCP spec itself is very early — the Angular docs explicitly warn it's "undergoing frequent changes."
-- Brian Treese's take (`briantree.se/angular-webmcp-tools`, May 2026): *"I'd treat this as a preview of where Angular and browser-based AI tooling are heading rather than a production recommendation today."*
+- Brian Treese's take ([`briantree.se/angular-webmcp-tools`](https://briantree.se/angular-webmcp-tools), May 2026): *"I'd treat this as a preview of where Angular and browser-based AI tooling are heading rather than a production recommendation today."*
 
 Recommended adoption: pilot in an internal tool or a feature flag, watch the spec for breaking changes, hold off on customer-facing surfaces until the experimental tag is removed.
 
@@ -569,7 +569,7 @@ WebMCP is one slice of a broader agentic-frontend story. Three other standards a
 
 The clean mental separation: **WebMCP is about your app being a tool**, **AG-UI is about talking to your agent**, **A2UI is about the agent generating UI**. Different layers, often combined in one app.
 
-For Angular teams that want to go deep here, Manfred Steyer's six-part "Agentic Angular" series is the canonical resource — covers AG-UI conceptually, the TypeScript SDK, Angular integration, A2UI, the AG-UI + A2UI combo via `ACTIVITY_SNAPSHOT`, and custom component catalogs. Reference repo: `github.com/angular-architects/flights42`. Articles at `angulararchitects.io/en/blog` (filter by Steyer, April–May 2026).
+For Angular teams that want to go deep here, Manfred Steyer's six-part "Agentic Angular" series is the canonical resource — covers AG-UI conceptually, the TypeScript SDK, Angular integration, A2UI, the AG-UI + A2UI combo via `ACTIVITY_SNAPSHOT`, and custom component catalogs. Reference repo: [`github.com/angular-architects/flights42`](https://github.com/angular-architects/flights42). Articles at [`angulararchitects.io/en/blog`](https://www.angulararchitects.io/en/blog/) (filter by Steyer, April–May 2026).
 
 This is out of scope for v21/v22 release notes but in scope for "where is Angular heading in the agentic era." Treat as further reading, not a v22 adoption checklist.
 
@@ -641,7 +641,7 @@ protected onAgeKeydown(event: KeyboardEvent) {
 }
 ```
 
-**Why this is a slide-worthy moment.** It's a small fix that eliminates a class of subtle UX bugs that slip through code review — the kind your QA team raises three weeks after launch ("the age field changes when I scroll the page on mobile?"). For most apps, `type="text" + inputmode="numeric"` + schema validation is now the correct default. Use `type="number"` only when you genuinely have an incremental quantity where the spinner adds value (and even then, consider the mousewheel side effect). Source: Brian Treese, *"Better Numeric Inputs in Angular (Signal Forms + Angular 22)"* (Apr 2026, `briantree.se/angular-signal-forms-number-inputs`).
+**Why this is a slide-worthy moment.** It's a small fix that eliminates a class of subtle UX bugs that slip through code review — the kind your QA team raises three weeks after launch ("the age field changes when I scroll the page on mobile?"). For most apps, `type="text" + inputmode="numeric"` + schema validation is now the correct default. Use `type="number"` only when you genuinely have an incremental quantity where the spinner adds value (and even then, consider the mousewheel side effect). Source: Brian Treese, *"Better Numeric Inputs in Angular (Signal Forms + Angular 22)"* (Apr 2026, [`briantree.se/angular-signal-forms-number-inputs`](https://briantree.se/angular-signal-forms-number-inputs)).
 
 #### `Resource` / `rxResource` / `httpResource`
 v22 makes the async resource story production-ready. Beyond the headline stability label, the release also improved real-world ergonomics: resource composition via `chain()`, SSR caching via explicit `id`, and leak fixes in `rxResource()` / `httpResource()` that matter in long-running sessions.
@@ -961,20 +961,20 @@ Curated picks for going deeper, with a clear preference for primary sources (Ang
 ### Signal Forms — canonical sessions
 
 - **"Angular Signal Forms with Core Maintainer Alex Rickabaugh"** — YouTube `hKkiivsyrHA`, Jan 28 2026. The single most important watch on this topic. Alex (Angular core team, the person who built it) covers *why* Signal Forms exists, the design decisions, validators-as-schema, the `[formField]` directive, and how the team manages breaking changes during the experimental phase. ~45 min, deep and authoritative.
-- **"Signal Forms meet the Signal Store"** — Michael Egger-Zikes (Angular GDE, AngularArchitects), ng-India April 2026, also at NG Poland Nov 2026. Slide deck on Speaker Deck. The canonical talk on combining Signal Forms with NgRx Signal Store for app-wide state — directly relevant if your app has more than trivial forms. Code repo: `github.com/mikezks/ng-india-2026`.
+- **"Signal Forms meet the Signal Store"** — Michael Egger-Zikes (Angular GDE, AngularArchitects), ng-India April 2026, also at NG Poland Nov 2026. Slide deck on Speaker Deck. The canonical talk on combining Signal Forms with NgRx Signal Store for app-wide state — directly relevant if your app has more than trivial forms. Code repo: [`github.com/mikezks/ng-india-2026`](https://github.com/mikezks/ng-india-2026).
 - **ng-conf 2025 LIVE Angular Team Keynote** — Mark Thompson, Alex Rickabaugh, Minko Gechev. YouTube `vdRKAtymFds`, Oct 17 2025. Sets the strategic context for v21/v22 (signal-first, zoneless, AI integration). Not Signal-Forms-specific but the framing slide.
 - **"Live Q/A with the Angular Team | August 2025"** — Alex Rickabaugh and Mark Thompson. YouTube `R82ZAgL3BGU`. Audience questions on Signal Forms in its mid-experimental phase — useful for understanding what changed between then and v21.2.
 
 ### Signals & Resource API
 
-- **Official v21 Signals tutorial** — `angular.dev/tutorials/signals`. Walks `signal` → `computed` → `linkedSignal` → `model` → `effect` → `toSignal`. Replaces older fragmented blog content. Mandatory if anyone on your team came in pre-v18.
-- **Angular v20 announcement (Minko Gechev)** — `blog.angular.dev/announcing-angular-v20-b5c9c06cf301`. The release that stabilized `effect`, `linkedSignal`, and `toSignal`. Useful context for "how we got here."
-- **JS Party podcast #310 — "Angular Signals with Pavel Kozlowski & Alex Rickabaugh"** — `changelog.com/jsparty/310`. Long-form history of why the Angular team chose signals; complementary to the Signal Forms talk above.
+- **Official v21 Signals tutorial** — [`angular.dev/tutorials/signals`](https://angular.dev/tutorials/signals). Walks `signal` → `computed` → `linkedSignal` → `model` → `effect` → `toSignal`. Replaces older fragmented blog content. Mandatory if anyone on your team came in pre-v18.
+- **Angular v20 announcement (Minko Gechev)** — [`blog.angular.dev/announcing-angular-v20-b5c9c06cf301`](https://blog.angular.dev/announcing-angular-v20-b5c9c06cf301). The release that stabilized `effect`, `linkedSignal`, and `toSignal`. Useful context for "how we got here."
+- **JS Party podcast #310 — "Angular Signals with Pavel Kozlowski & Alex Rickabaugh"** — [`changelog.com/jsparty/310`](https://changelog.com/jsparty/310). Long-form history of why the Angular team chose signals; complementary to the Signal Forms talk above.
 
 ### Zoneless & change detection
 
-- **Official zoneless guide** — `angular.dev/guide/zoneless`. Authoritative on which notifications trigger change detection in a zoneless app.
-- **OnPush-by-default RFC #66779** — `github.com/angular/angular/discussions/66779` (MarkTechson, alxhub, Jan 2026). The primary source for the v22 OnPush flip. Read this before planning the v22 upgrade.
+- **Official zoneless guide** — [`angular.dev/guide/zoneless`](https://angular.dev/guide/zoneless). Authoritative on which notifications trigger change detection in a zoneless app.
+- **OnPush-by-default RFC #66779** — [`github.com/angular/angular/discussions/66779`](https://github.com/angular/angular/discussions/66779) (MarkTechson, alxhub, Jan 2026). The primary source for the v22 OnPush flip. Read this before planning the v22 upgrade.
 - **Brygida Fiejdasz — "No Zone, No Problem: Building Angular Apps without Zone.js"** — NG Poland 2026. Practical migration patterns.
 - **Francesco Borzì — "How to migrate your Angular app to Zoneless"** — Feb 2026 on Medium. Battle-tested patterns from real migrations (Keira3, Royal BAM Group). Recommended over the more generic "remove zone.js" guides.
 - **George Hulpoi — "Angular Zoneless: Migrating off Zone.js without breaking your UI"** — DEV Community. Covers the third-party callback hotspot in detail.
@@ -982,47 +982,45 @@ Curated picks for going deeper, with a clear preference for primary sources (Ang
 
 ### AI / MCP — IDE integration (traditional MCP)
 
-- **Angular AI guide** — `angular.dev/ai/develop-with-ai`. The best-practice prompt + setup instructions for VS Code, Cursor, JetBrains, Claude Code.
-- **`angular.dev/ai/mcp`** — MCP server tool list, per-IDE config.
+- **Angular AI guide** — [`angular.dev/ai/develop-with-ai`](https://angular.dev/ai/develop-with-ai). The best-practice prompt + setup instructions for VS Code, Cursor, JetBrains, Claude Code.
+- **[`angular.dev/ai/mcp`](https://angular.dev/ai/mcp)** — MCP server tool list, per-IDE config.
 - **"The Angular MCP Server in Angular 21: How AI Meets the CLI"** — Rahul Anandeshi on Medium. Practical walkthrough.
 - **The New Stack interview with Simona Cotin** (Oct 29 2025) on the Web Codegen Scorer and the closed loop with `llms.txt`.
 
 ### WebMCP & Agentic UI — apps that expose tools to agents
 
-- **Official Angular WebMCP guide** — `next.angular.dev/ai/webmcp`. The primary source. Covers WebMCP providers, Signal Forms auto-tool generation, and route-scoped tools with auto-cleanup.
+- **Official Angular WebMCP guide** — [`next.angular.dev/ai/webmcp`](https://next.angular.dev/ai/webmcp). The primary source. Covers WebMCP providers, Signal Forms auto-tool generation, and route-scoped tools with auto-cleanup.
 - **"Your Web App, Meet Your AI Agent — Angular WebMCP"** — Fatima Amzil on Medium (May 2026). Full TODO app walkthrough showing the W3C `navigator.modelContext` standard, the Chrome WebMCP extension, and a working agent demo.
-- **"Angular v22 WebMCP Tools Explained"** — Brian Treese (`briantree.se/angular-webmcp-tools`, May 2026). Practical DI-context use with `inject()`-aware tools. Pragmatic perspective on production-readiness.
-- **Manfred Steyer — "Agentic UI with Angular" (eBook)** — `agentic-angular.com`. The broader pattern context: MCP, AG-UI, A2UI, MCP Apps. Recommended read before pitching agentic features internally.
-- **AngularArchitects workshop** — *"Agentic UI with Angular: Architecture & Patterns"* (`angulararchitects.io/en/training/agentic-ai-with-angular-architecture-patterns`). The hands-on version of the eBook.
+- **"Angular v22 WebMCP Tools Explained"** — Brian Treese ([`briantree.se/angular-webmcp-tools`](https://briantree.se/angular-webmcp-tools), May 2026). Practical DI-context use with `inject()`-aware tools. Pragmatic perspective on production-readiness.
+- **Manfred Steyer — "Agentic UI with Angular" (eBook)** — [`agentic-angular.com`](https://agentic-angular.com). The broader pattern context: MCP, AG-UI, A2UI, MCP Apps. Recommended read before pitching agentic features internally.
+- **AngularArchitects workshop** — *"Agentic UI with Angular: Architecture & Patterns"* ([`angulararchitects.io/en/training/agentic-ai-with-angular-architecture-patterns`](https://www.angulararchitects.io/en/training/agentic-ai-with-angular-architecture-patterns)). The hands-on version of the eBook.
 - **W3C ModelContext API** — the underlying browser standard. Specs still in flux; treat WebMCP as an early-adoption signal, not a production commitment.
 
 **Adjacent ecosystem deep-dives (framework-agnostic standards, not Angular core):**
-- **Steyer's "Agentic Angular" 6-part series** — `angulararchitects.io/en/blog` (April–May 2026). The canonical Angular-flavored walkthrough of AG-UI and A2UI:
+- **Steyer's "Agentic Angular" 6-part series** — [`angulararchitects.io/en/blog`](https://www.angulararchitects.io/en/blog/) (April–May 2026). The canonical Angular-flavored walkthrough of AG-UI and A2UI:
   1. *Understanding AG-UI: The Standard for Agentic User Interfaces* (Apr 20)
   2. *AG-UI in Practice: The SDK for TypeScript* (Apr 23)
   3. *Implementing AG-UI with Angular* (Apr 27)
   4. *A2UI: How AI Generates Dynamic UIs at Runtime* (Apr 30)
   5. *Integrating A2UI with AG-UI in Angular* (May 1)
   6. *Custom Catalogs in A2UI: Your Own Components for AI-Generated UIs* (May 5)
-- **Reference repo** — `github.com/angular-architects/flights42`. Flight-booking app with `agentic`, `a2ui-dynamic`, and `a2ui-dsl` branches showing different integration levels.
-- **AG-UI spec** — `docs.ag-ui.com` (backed by CopilotKit, adapters for 14+ agent frameworks).
-
-### Release recaps (third-party, in priority order)
+- **Reference repo** — [`github.com/angular-architects/flights42`](https://github.com/angular-architects/flights42). Flight-booking app with `agentic`, `a2ui-dynamic`, and `a2ui-dsl` branches showing different integration levels.
+- **AG-UI spec** — [`docs.ag-ui.com`](https://docs.ag-ui.com) (backed by CopilotKit, adapters for 14+ agent frameworks).
 
 ### Official release references
 
-- **Angular team — "Announcing Angular v22"** — `blog.angular.dev/announcing-angular-v22-c52bb83a4664`
-- **TypeScript team — "Announcing TypeScript 6.0"** — `devblogs.microsoft.com/typescript/announcing-typescript-6-0/`
-- **TypeScript 6.0 release notes** — `typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html`
+- **Angular team — "Announcing Angular v22"** — [`blog.angular.dev/announcing-angular-v22-c52bb83a4664`](https://blog.angular.dev/announcing-angular-v22-c52bb83a4664)
+- **TypeScript team — "Announcing TypeScript 6.0"** — [`devblogs.microsoft.com/typescript/announcing-typescript-6-0/`](https://devblogs.microsoft.com/typescript/announcing-typescript-6-0/)
+- **TypeScript 6.0 release notes** — [`typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html`](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html)
 
 ### Release recaps (third-party, in priority order)
 
-1. **Ninja Squad — "What's new in Angular 22.0?"** — `blog.ninja-squad.com/2026/06/03/what-is-new-angular-22.0`. The most precise third-party v22 recap; especially strong on Signal Forms details, testing migration, and compiler/runtime changes.
-2. **Angular.love — "Angular 22: Key Features and Changes"** — `angular.love/angular-22-key-features-and-changes`. Good thematic framing, especially for WebMCP, security hardening, DI ergonomics, and migration implications.
-3. **Ninja Squad recaps** — `blog.ninja-squad.com` covers every minor (21.0, 21.1, 21.2). The most reliable third-party source; technically precise, ships within days of each release.
-4. **Angular.love** — `angular.love`. Good for thematic deep-dives.
-5. **AngularArchitects blog** — `angulararchitects.io/blog`. Manfred Steyer and Michael Egger-Zikes. Strong on architecture and Signal Store integration.
-6. **The Codersclan** — `thecodersclan.com/blog/angular-21-new-features-explained-real-examples`. Beginner-to-intermediate angle if you have mixed-experience attendees.
+1. **Ninja Squad — "What's new in Angular 22.0?"** — [`blog.ninja-squad.com/2026/06/03/what-is-new-angular-22.0`](https://blog.ninja-squad.com/2026/06/03/what-is-new-angular-22.0). The most precise third-party v22 recap; especially strong on Signal Forms details, testing migration, and compiler/runtime changes.
+2. **Angular.love — "Angular 22: Key Features and Changes"** — [`angular.love/angular-22-key-features-and-changes`](https://angular.love/angular-22-key-features-and-changes). Good thematic framing, especially for WebMCP, security hardening, DI ergonomics, and migration implications.
+3. **Ninja Squad recaps** — [`blog.ninja-squad.com`](https://blog.ninja-squad.com) covers every minor (21.0, 21.1, 21.2). The most reliable third-party source; technically precise, ships within days of each release.
+4. **Angular.love** — [`angular.love`](https://angular.love). Good for thematic deep-dives.
+5. **AngularArchitects blog** — [`angulararchitects.io/blog`](https://www.angulararchitects.io/blog). Manfred Steyer and Michael Egger-Zikes. Strong on architecture and Signal Store integration.
+6. **The Codersclan** — [`thecodersclan.com/blog/angular-21-new-features-explained-real-examples`](https://thecodersclan.com/blog/angular-21-new-features-explained-real-examples). Beginner-to-intermediate angle if you have mixed-experience attendees.
 
 ### Conferences to track (2026)
 
