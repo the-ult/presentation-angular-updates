@@ -80,7 +80,7 @@ The **graduation** release:
 - Signal Forms → **stable**
 - **OnPush** as default change detection
 - `resource()`, `rxResource()`, `httpResource()` → **stable**
-- `injectAsync()` **Developer Preview**
+- `injectAsync()` **stable**
 - `@Service()` **public API**
 - WebMCP for agentic UI
 - FetchBackend default for `HttpClient`
@@ -624,34 +624,55 @@ Three Magic Move steps. The pattern: data → schema → template. No FormGroup,
 
 ---
 
-# Login form: before vs after
+# Login form: 3-step evolution
 
 <div class="text-sm pt-2 opacity-80">
 Use case: a common auth/profile form where the model itself should stay the source of truth.
 </div>
 
 <div class="text-xs pt-2 opacity-60">
-Step 1 in the progression: <code>Reactive Forms</code> → <code>Signal Forms</code>
+Step 1 in the progression: <code>legacy Reactive Forms</code> → <code>typed Reactive Forms</code> → <code>Signal Forms</code>
 </div>
 
 ````md magic-move {lines: true}
 ```typescript
-// ❌ Reactive Forms — explicit form model + subscriptions
+// ❌ Legacy Reactive Forms — constructor DI + ngOnInit + non-typed form
 export class LoginComponent implements OnInit {
-  private readonly destroyRef = inject(DestroyRef);
   loginForm!: FormGroup;
 
   constructor(private fb: FormBuilder) {}
 
   ngOnInit() {
     this.loginForm = this.fb.group({
-      email:    ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
 
     this.loginForm.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(value => this.onChange(value));
+      .subscribe((value) => this.onChange(value));
+  }
+}
+```
+
+```typescript
+// ✅ Typed Reactive Forms — inject() + typed form model
+export class LoginComponent {
+  private readonly fb = inject(NonNullableFormBuilder);
+
+  protected readonly loginForm = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+  });
+
+  constructor() {
+    this.loginForm.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((value) => this.onChange(value));
+  }
+
+  submit() {
+    const credentials = this.loginForm.getRawValue();
+    this.onSubmit(credentials);
   }
 }
 ```
@@ -659,9 +680,9 @@ export class LoginComponent implements OnInit {
 ```typescript
 // ✅ Signal Forms — model-first form
 export class LoginComponent {
-  protected credentials = signal({ email: '', password: '' });
+  protected readonly credentials = signal({ email: '', password: '' });
 
-  protected loginForm = form(this.credentials, s => {
+  protected readonly loginForm = form(this.credentials, s => {
     required(s.email);    email(s.email);
     required(s.password); minLength(s.password, 6);
   });
@@ -673,11 +694,11 @@ export class LoginComponent {
 ````
 
 <div class="text-xs opacity-70 pt-2">
-The real win is not just fewer lines — the signal model becomes the single source of truth, and the usual <code>valueChanges</code> subscription + teardown boilerplate disappears.
+The progression matters: lots of older Angular code still looks like the first version, many teams modernize to the typed reactive middle step first, and Signal Forms then remove the second form model entirely.
 </div>
 
 <!--
-This is the side-by-side that lands hardest. Everyone has written the top version dozens of times.
+This lands better as a three-step evolution: legacy constructor/ngOnInit code, modern typed reactive forms, then Signal Forms.
 -->
 
 ---
@@ -823,12 +844,11 @@ Step 3 in the progression: <code>manual RxJS validation glue</code> → <code>va
 ```typescript
 // Before — Reactive Forms + manual RxJS debounce pipeline
 export class SignupComponent {
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly fb = inject(FormBuilder);
+  private readonly fb = inject(NonNullableFormBuilder);
   private readonly http = inject(HttpClient);
 
   protected readonly form = this.fb.group({
-    email: ['', [Validators.required, Validators.email]]
+    email: ['', [Validators.required, Validators.email]],
   });
 
   protected readonly emailTaken = signal(false);
@@ -837,11 +857,14 @@ export class SignupComponent {
     this.form.controls.email.valueChanges.pipe(
       debounceTime(400),
       distinctUntilChanged(),
-      takeUntilDestroyed(this.destroyRef),
-      switchMap(email => this.http.get<{ taken: boolean }>(
-        `/api/users/check?email=${email}`
-      ))
-    ).subscribe(result => this.emailTaken.set(result.taken));
+      filter(() => this.form.controls.email.valid),
+      switchMap((email) =>
+        this.http.get<{ taken: boolean }>('/api/users/check', {
+          params: { email },
+        })
+      ),
+      takeUntilDestroyed(),
+    ).subscribe((result) => this.emailTaken.set(result.taken));
   }
 }
 ```
@@ -900,12 +923,18 @@ This slide makes the Signal Forms validation story concrete. The audience should
 <input
   type="text"
   inputmode="numeric"
-  [formField]="signupForm.age"
-  (keydown)="onAgeKeydown($event)" />
+  [formField]="signupForm.age" />
 ```
 ````
 
 </v-click>
+
+<div class="text-xs opacity-70 pt-2">
+Compare the trade-off explicitly:<br/>
+<code>type="number"</code> = native numeric semantics + spinner / scroll-wheel behavior<br/>
+<code>type="text" inputmode="numeric"</code> = text UI + mobile numeric keyboard<br/>
+Optional: add <code>pattern="[0-9]*"</code> if you also want native HTML constraint validation.
+</div>
 
 <!--
 This is a "huh, finally" moment. Every dev in the room has fought this.
@@ -922,28 +951,23 @@ interface SignupFormData {
   age: number | null;        // 👈 stays number | null in v22
 }
 
-protected model = signal<SignupFormData>({ username: '', email: '', age: null });
+protected readonly model = signal<SignupFormData>({ username: '', email: '', age: null });
 
-protected signupForm = form(this.model, s => {
+protected readonly signupForm = form(this.model, s => {
   required(s.age, { message: 'Age is required' });
   min(s.age, 18,  { message: 'You must be at least 18' });
   max(s.age, 120, { message: 'Please enter a valid age' });
 });
-
-protected onAgeKeydown(event: KeyboardEvent) {
-  const allowed = ['Backspace','Delete','Tab','Escape','Enter','ArrowLeft','ArrowRight'];
-  if (allowed.includes(event.key)) return;
-  if (!/^\d$/.test(event.key)) event.preventDefault();
-}
 ```
 
 <div class="text-xs opacity-70 pt-2">
 v22 keeps the UI as text, the model as <code>number | null</code>, and empty input as <code>null</code>.<br/>
+If you also want stricter UX, <code>pattern="[0-9]*"</code> or a tiny custom input/paste filter is optional — Angular can still own <code>required</code>, <code>min</code>, and <code>max</code> in the form schema.<br/>
 Commit <code>41b1410c</code>. Source: Brian Treese, <a href="https://briantree.se/angular-signal-forms-number-inputs"><em>briantree.se/angular-signal-forms-number-inputs</em></a>
 </div>
 
 <!--
-The keydown handler is the MDN-recommended pattern. Browsers are inconsistent at enforcing numeric input even with inputmode.
+The real Angular v22 story is number/null model binding on a text input. Key filtering is optional UI hardening, not the feature itself.
 -->
 
 ---
@@ -1021,6 +1045,10 @@ The arrow function in (click) is the moment everyone goes "wait, we can do THAT 
 ```
 
 ```css
+.toast {
+  transition: opacity 160ms ease;
+}
+
 .toast-in {
   opacity: 1;
   @starting-style { opacity: 0; }
@@ -1065,13 +1093,13 @@ layout: two-cols-header
 
 ```html
 <div ngToolbar aria-label="Editor actions">
-  <button ngToolbarWidget value="undo">Undo</button>
-  <button ngToolbarWidget value="redo">Redo</button>
+  <button type="button" ngToolbarWidget value="undo">Undo</button>
+  <button type="button" ngToolbarWidget value="redo">Redo</button>
 
   <div ngToolbarWidgetGroup role="radiogroup" aria-label="Alignment">
-    <button ngToolbarWidget value="left">Left</button>
-    <button ngToolbarWidget value="center">Center</button>
-    <button ngToolbarWidget value="right">Right</button>
+    <button type="button" ngToolbarWidget value="left">Left</button>
+    <button type="button" ngToolbarWidget value="center">Center</button>
+    <button type="button" ngToolbarWidget value="right">Right</button>
   </div>
 </div>
 ```
@@ -1145,7 +1173,7 @@ enum ChangeDetectionStrategy {
 
 # `injectAsync()`: lazy services without injector boilerplate
 
-**Developer Preview in v22.** Import on demand, still resolve through Angular DI.
+**Stable in v22.** Import on demand, still resolve through Angular DI.
 Best fit: root-provided services you only need on specific interactions.
 
 <div class="text-sm pt-2 opacity-80">
@@ -1160,10 +1188,9 @@ Step 1 in the progression: <code>inject()</code> / <code>Injector.get()</code> b
 ```typescript
 // Before — Injector.get() + manual promise caching
 export class PostEditorComponent {
+  private readonly injector = inject(Injector);
   private markdownService?: MarkdownService;
   private loading?: Promise<MarkdownService>;
-
-  constructor(private injector: Injector) {}
 
   private async getMarkdown() {
     if (this.markdownService) return this.markdownService;
@@ -1179,13 +1206,13 @@ export class PostEditorComponent {
 
 ```typescript
 // v22 — injectAsync()
-import { Component, injectAsync, signal } from '@angular/core';
+import { injectAsync, signal } from '@angular/core';
 
 export class PostEditorComponent {
   protected readonly content = signal('');
   protected readonly previewHtml = signal('');
 
-  private markdownService = injectAsync(
+  private readonly markdownService = injectAsync(
     () => import('../markdown.service').then(m => m.MarkdownService)
   );
 
@@ -1636,9 +1663,21 @@ export const routes: Routes = [{
           additionalProperties: false,
         } as const,
         execute: async ({ addressId, shippingSpeed }) => {
+          if (
+            typeof addressId !== 'string' ||
+            (shippingSpeed !== 'standard' && shippingSpeed !== 'next-day')
+          ) {
+            throw new Error('Invalid shipping preferences.');
+          }
+
           const checkout = inject(CheckoutWizardService);
           await checkout.applyShipping(addressId, shippingSpeed);
-          return `Shipping step updated to ${shippingSpeed}.`;
+          return {
+            content: [{
+              type: 'text',
+              text: `Shipping step updated to ${shippingSpeed}.`,
+            }],
+          };
         },
       },
     ]),
@@ -1665,15 +1704,25 @@ export const appConfig: ApplicationConfig = {
 };
 
 // checkout.component.ts
-const checkoutForm = form(this.cartData, schema, {
-  experimentalWebMcpTool: {
-    name: 'completeCheckout',
-    description: 'Fill and submit the checkout form on the user\'s behalf'
+const checkoutForm = form(
+  this.cartData,
+  () => {},
+  {
+    experimentalWebMcpTool: {
+      name: 'completeCheckout',
+      description: 'Fill and submit the checkout form on the user\'s behalf'
+    },
+    submission: {
+      action: async (formValue) => {
+        console.log('Submitting checkout:', formValue);
+      }
+    }
   }
-});
+);
 
 // Angular derives JSON schema from the form model
 // and registers the form as a WebMCP tool.
+// Use concrete initial values so Angular can infer the schema.
 ```
 
 <div class="text-xs opacity-70 pt-2">
