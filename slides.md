@@ -733,6 +733,10 @@ const loginForm = form(loginModel, (schema) => {
 Rule of thumb: <code>transformedValue.parse</code> is for input conversion (raw ↔ typed), while Zod/Standard Schema is for declarative validation rules.
 </div>
 
+<div class="text-xs opacity-60 pt-2">
+Speaker line: “In Signal Forms, <code>parse</code> means UI value conversion. For schema validation, use <code>validateStandardSchema</code> with Zod.”
+</div>
+
 ---
 
 # Signal Forms: how v21 refined it
@@ -1898,6 +1902,78 @@ export class UserPage {
 
 <div class="text-xs opacity-70 pt-2">
 Use <code>httpResource()</code> for reads that should track signals and own loading/error state. Keep plain <code>HttpClient</code> for mutations and imperative workflows.
+</div>
+
+---
+
+# Zod with `httpResource()`: request + response safety
+
+<div class="text-sm pt-2 opacity-80">
+Best-practice split: validate <strong>request input</strong> before issuing the request, then validate <strong>response payload</strong> with <code>parse</code>.
+</div>
+
+<div class="text-xs pt-3 opacity-80">
+Why <code>parse: schema.parse</code> is smart in <code>httpResource()</code>:
+<ul class="mt-1 space-y-1">
+  <li><strong>Fail fast:</strong> backend shape drift is caught at the HTTP boundary.</li>
+  <li><strong>Strong typing:</strong> parse output becomes the type of <code>resource.value()</code>.</li>
+  <li><strong>Cleaner code:</strong> one validation boundary instead of scattered checks.</li>
+</ul>
+</div>
+
+<div class="text-xs opacity-60 pt-2">
+Speaker cue: “Parse at the HTTP edge once, then trust typed signals everywhere else.”
+</div>
+
+```typescript
+import { signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import * as z from 'zod';
+
+const userRequestSchema = z.object({
+  id: z.number().int().positive(),
+});
+
+const userResponseSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().email(),
+});
+
+export class UserPage {
+  protected readonly selectedUserId = signal(42);
+
+  protected readonly user = httpResource(
+    () => {
+      const requestCheck = userRequestSchema.safeParse({ id: this.selectedUserId() });
+      if (!requestCheck.success) return undefined; // keep resource idle until request is valid
+
+      return {
+        url: '/api/users/details',
+        params: { id: requestCheck.data.id },
+      };
+    },
+    {
+      parse: userResponseSchema.parse,
+    }
+  );
+}
+```
+
+<div class="text-xs opacity-70 pt-2">
+<strong>Important:</strong> <code>validateStandardSchema</code> is for Signal Forms. For <code>httpResource()</code>, use the request function + <code>parse</code> option. For <code>resource()</code>, parse inside the loader.
+</div>
+
+```typescript
+// Same idea with resource(): validate in the loader
+const account = resource({
+  params: () => ({ id: accountId() }),
+  loader: async ({ params }) => accountSchema.parse(await api.getAccount(params.id)),
+});
+```
+
+<div class="text-xs opacity-60 pt-2">
+If you need mutation flows (create/update/delete), stick with <code>HttpClient</code> and apply Zod parsing in that service path.
 </div>
 
 <!--
