@@ -915,9 +915,11 @@ This slide makes the Signal Forms validation story concrete. The audience should
 <!-- Pre-v22 — type="number" was the practical option -->
 <input type="number" [formField]="signupForm.age" />
 
-<!-- 🐛 spinner UI nobody wants
-   🐛 mousewheel silently changes value
-   🐛 mobile keyboard inconsistent -->
+<!--
+  🐛 spinner UI nobody wants
+  🐛 mousewheel silently changes value
+  🐛 mobile keyboard inconsistent
+-->
 ```
 
 ```html
@@ -1902,58 +1904,178 @@ The defaults and migration details that hit real apps
 
 ---
 
-# Single read: before vs after
+# Angular Migration Commands
 
 <div class="text-sm pt-2 opacity-80">
-Use case: a details page where one signal (like <code>userId</code>) drives one backend read.
+Official schematics from <code>@angular/core</code> — run these to modernize your codebase
 </div>
 
-<div class="text-xs pt-2 opacity-60">
-Step 1 in the progression: <code>HttpClient + RxJS</code> → <code>httpResource()</code>
+<div class="text-xs opacity-70 pt-4">
+Source: <a href="https://angular.dev/reference/migrations">angular.dev/reference/migrations</a>
 </div>
 
-````md magic-move {lines: true}
-```typescript
-// Before — manual loading state + subscription cleanup
-export class UserPage {
-  private readonly http = inject(HttpClient);
-  protected readonly userId = signal(42);
-  protected readonly user = signal<User | null>(null);
-  protected readonly loading = signal(false);
+---
 
-  constructor() {
-    effect((onCleanup) => {
-      this.loading.set(true);
+# Migration — Core & Standalone
 
-      const sub = this.http
-        .get<User>(`/api/users/${this.userId()}`)
-        .subscribe(user => {
-          this.user.set(user);
-          this.loading.set(false);
-        });
-
-      onCleanup(() => sub.unsubscribe());
-    });
-  }
-}
-```
-
-```typescript
-// v22 — declarative read path with httpResource()
-export class UserPage {
-  protected readonly userId = signal(42);
-
-  protected readonly user = httpResource<User>(() =>
-    `/api/users/${this.userId()}`
-  );
-}
-// user.value(), user.isLoading(), user.error(), user.status()
-```
-````
-
-<div class="text-xs opacity-70 pt-2">
-Use <code>httpResource()</code> for reads that should track signals and own loading/error state. Keep plain <code>HttpClient</code> for mutations and imperative workflows.
+<div class="text-xs pt-1 opacity-80">
+Start here: update framework first, then run standalone migration in order.
 </div>
+
+### Core Update
+
+<div class="text-xs leading-snug mt-1 rounded-lg border border-white/10 bg-white/5 p-2">
+  <strong>Update first:</strong> <code>ng update @angular/core @angular/cli</code>
+</div>
+
+### Standalone migration (3 phases)
+
+<div class="migration-steps text-xs leading-snug mt-1 space-y-1.5">
+
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <div><strong>Phase 1 — Convert declarations</strong></div>
+  <code>ng generate @angular/core:standalone</code><br/>
+  <span class="opacity-75">Select “Convert all components, directives and pipes to standalone”</span><br/>
+  <span class="opacity-75">Verify: <code>ng build</code></span>
+</div>
+
+<v-click>
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <div><strong>Phase 2 — Remove NgModules</strong></div>
+  <code>ng generate @angular/core:standalone</code><br/>
+  <span class="opacity-75">Select “Remove unnecessary NgModule classes”</span><br/>
+  <span class="opacity-75">Verify: <code>ng build</code></span>
+</div>
+</v-click>
+
+<v-click>
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <div><strong>Phase 3 — Standalone bootstrapping</strong></div>
+  <code>ng generate @angular/core:standalone</code><br/>
+  <span class="opacity-75">Select “Bootstrap the project using standalone APIs”</span>
+</div>
+</v-click>
+
+</div>
+
+<div class="text-xs opacity-70 pt-4">
+Source: <a href="https://angular.dev/reference/migrations/standalone#migrations-steps">Standalone migration steps</a>
+</div>
+
+---
+
+# Migration — Template & Reactivity
+
+<div class="text-xs pt-1 opacity-80">
+Run these after baseline migration to modernize templates and signal-oriented APIs.
+</div>
+
+### Template & Reactivity modernizations
+
+<div class="migration-steps text-xs leading-snug mt-1 space-y-1.5">
+
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>Control flow:</strong> <code>ng generate @angular/core:control-flow</code>
+</div>
+
+<v-click>
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>Signal inputs:</strong> <code>ng generate @angular/core:signal-inputs</code>
+</div>
+</v-click>
+
+<v-click>
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>Signal outputs:</strong> <code>ng generate @angular/core:outputs</code>
+</div>
+</v-click>
+
+<v-click>
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>Signal queries:</strong> <code>ng generate @angular/core:signal-queries</code>
+</div>
+</v-click>
+
+<v-click>
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>inject() migration:</strong> <code>ng generate @angular/core:inject</code>
+</div>
+</v-click>
+
+<v-click>
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>Cleanup imports:</strong> <code>ng generate @angular/core:cleanup-unused-imports</code>
+</div>
+</v-click>
+
+</div>
+
+<div class="text-xs opacity-70 pt-4">
+Source: <a href="https://angular.dev/reference/migrations">angular.dev/reference/migrations</a>
+</div>
+
+---
+
+# Migration — Style & Testing
+
+<div class="text-xs pt-1 opacity-80">
+Finish with template style cleanups and test runner migrations.
+</div>
+
+### Style & DOM cleanup
+
+<div class="migration-steps text-xs leading-snug mt-1 space-y-1.5">
+
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>Self-closing tags:</strong> <code>ng generate @angular/core:self-closing-tag</code>
+</div>
+
+<v-click>
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>NgClass → [class]:</strong> <code>ng generate @angular/core:ngclass-to-class</code>
+</div>
+</v-click>
+
+<v-click>
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>NgStyle → [style]:</strong> <code>ng generate @angular/core:ngstyle-to-style</code>
+</div>
+</v-click>
+
+<v-click>
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>CommonModule split:</strong> <code>ng generate @angular/core:common-to-standalone</code>
+</div>
+</v-click>
+
+</div>
+
+### Testing
+
+<div class="migration-steps text-xs leading-snug mt-1 space-y-1.5">
+
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>Router testing migration:</strong><br/>
+  <code>ng generate @angular/core:router-testing-module-migration</code>
+</div>
+
+<v-click>
+<div class="rounded-lg border border-white/10 bg-white/5 p-1.5">
+  <strong>Jasmine → Vitest (v21+):</strong><br/>
+  <code>ng g @schematics/angular:refactor-jasmine-vitest</code>
+</div>
+</v-click>
+
+</div>
+
+<div class="text-xs opacity-70 pt-4">
+Source: <a href="https://angular.dev/reference/migrations">angular.dev/reference/migrations</a> and <a href="https://angular.dev/reference/migrations/standalone#migrations-steps">Standalone migration steps</a>
+</div>
+
+<!--
+Full command reference for all official Angular migrations.
+The standalone migration is a 3-phase process that must be run in order with verification between each step.
+-->
 
 ---
 
@@ -2399,6 +2521,42 @@ Call out the official migrations reference here: Angular ships named schematics 
 | **Adopting v22** | Start with one production slice. Audit libs for explicit `changeDetection`, then pilot `injectAsync()` / resource adoption on that slice. |
 
 </div>
+
+---
+
+# If your Angular workspace is on Nx
+
+<div class="grid grid-cols-2 gap-6 pt-4 text-sm">
+
+<div>
+
+### Practical reality today
+
+- Lots of Angular teams rely on **Nx DevTools** / Nx monorepo tooling
+- Angular <code>v22</code> support in Nx is still tied to the upcoming **Nx v23** release
+- The tracking work is in:<br/>
+  <a href="https://github.com/nrwl/nx/pull/35851"><code>nrwl/nx#35851</code></a>
+
+</div>
+
+<div>
+
+### What to tell teams
+
+- If Angular lives inside Nx, treat this as an **ecosystem timing gate**, not an Angular blocker
+- For most Nx repos: **wait for Nx v23** before broad Angular 22 rollout
+- If you want to explore early, pilot on a branch and watch the PR for Angular 22, TS 6, Angular ESLint 22, and schema updates landing together
+
+</div>
+
+</div>
+
+<!--
+Keep this near the decision matrix, not in the main Angular features flow.
+It is audience-specific ecosystem reality: important for teams on Nx, irrelevant noise for everyone else.
+
+Speaker line: “If your org standardizes on Nx DevTools, Angular 22 may be ready before your workspace tooling is.”
+-->
 
 ---
 

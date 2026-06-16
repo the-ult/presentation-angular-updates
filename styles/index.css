@@ -103,3 +103,16 @@ blockquote {
   padding-left: 0.85rem;
   opacity: 0.95;
 }
+
+.migration-steps .slidev-vclick-target {
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.migration-steps .slidev-vclick-target.slidev-vclick-prior {
+  opacity: 0.42;
+  transform: translateY(-1px);
+}
+
+.migration-steps .slidev-vclick-target.slidev-vclick-current {
+  opacity: 1;
+}
