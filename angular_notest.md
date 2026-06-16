@@ -923,6 +923,17 @@ Useful caveats from the current Chrome docs:
 6. **Audit `HttpClient` progress reporting** — switch `reportProgress: true` to explicit `reportUploadProgress`/`reportDownloadProgress`, and opt into `withXhr()` if you need upload progress.
 7. **Audit router behavior changes** — `paramsInheritanceStrategy` now defaults to `'always'`, `CanMatchFn` requires `currentSnapshot`, and router links now support `browserUrl`.
 
+#### If your Angular workspace is on Nx
+
+This is the main ecosystem caveat worth calling out in both the doc and the talk: if your team depends on **Nx DevTools** or standard Nx Angular workspace support, Angular 22 readiness is not just an Angular-core question.
+
+- The tracking work for Angular 22 support is in **[`nrwl/nx#35851`](https://github.com/nrwl/nx/pull/35851)**.
+- Practical takeaway: for many Nx-based teams, Angular 22 rollout is gated by the upcoming **Nx v23** release cadence.
+- This is best framed as an **ecosystem timing issue**, not as “Angular 22 isn’t ready.” Angular may be ready before your Nx workspace tooling is.
+- If your org wants to explore early, do it on a branch and watch that PR for the bundle of related changes landing together: Angular 22 support, TypeScript 6 compatibility, Angular ESLint 22 support, and Angular schema updates.
+
+For a talk track: “If your org standardizes on Nx DevTools, Angular 22 may be ready before your workspace tooling is.”
+
 ### Decision matrix
 - **On v17/v18:** Upgrade to v20 first, then v21. Arc.dev's upgrade guide is explicit: *"Teams on v17 or v18 should budget 3–6 days across two staged upgrade phases."*
 - **On v19/v20:** Direct upgrade to v21 is realistic in 2–8 hours for most apps.
