@@ -5,7 +5,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "slidev build",
-    "build:pages": "slidev build slides-pages.md --base /presentation-angular-updates/",
+    "build:pages": "slidev build slides-pages.md --base ./",
     "dev": "slidev --open",
     "export": "slidev export"
   },

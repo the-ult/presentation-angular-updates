@@ -39,7 +39,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Slidev deck for GitHub Pages
-        run: pnpm exec slidev build slides-pages.md --base "/${{ github.event.repository.name }}/"
+        run: pnpm exec slidev build slides-pages.md --base ./
 
       - name: Disable Jekyll processing
         run: touch dist/.nojekyll
